@@ -7,27 +7,28 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 const navItems = [
-  { key: '/', label: '首页', icon: <HomeOutlined /> },
-  { key: '/chat', label: 'AI情绪倾诉', icon: <MessageOutlined /> },
-  { key: '/journal', label: '心情日记', icon: <BookOutlined /> },
+  { key: '/', label: <Link href="/">首页</Link>, icon: <HomeOutlined /> },
+  { key: '/chat', label: <Link href="/chat">AI情绪倾诉</Link>, icon: <MessageOutlined /> },
+  { key: '/journal', label: <Link href="/journal">心情日记</Link>, icon: <BookOutlined /> },
 ];
 
 export default function Navbar() {
-  const [user, setUser] = useState(null);
-  const router = useRouter();
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user');
       if (storedUser) {
         try {
-          setUser(JSON.parse(storedUser));
+          return JSON.parse(storedUser);
         } catch (e) {
           localStorage.removeItem('user');
         }
       }
     }
-  }, []);
+    return null;
+  });
+  const router = useRouter();
+
+  useEffect(() => {}, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -49,7 +50,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-3">
@@ -60,15 +61,11 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-1">
-            <Menu mode="horizontal" items={navItems} className="border-none">
-              {navItems.map((item) => (
-                <Menu.Item key={item.key} icon={item.icon}>
-                  <Link href={item.key} className="text-gray-600 hover:text-blue-500 transition-colors">
-                    {item.label}
-                  </Link>
-                </Menu.Item>
-              ))}
-            </Menu>
+            <Menu 
+              mode="horizontal" 
+              items={navItems} 
+              className="border-none min-w-0"
+            />
           </div>
 
           <div className="flex items-center gap-3">
