@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Button } from 'antd';
 import { MessageOutlined, BookOutlined, HeartOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import FrontendLayout from './components/FrontendLayout';
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -20,7 +21,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-500">
+    <FrontendLayout>
+      <div className="min-h-screen bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-500">
       <div className="min-h-screen flex items-center justify-center px-6 py-40">
         <div className="max-w-6xl w-full">
           <div className="flex flex-col lg:flex-row items-center justify-center gap-4 lg:gap-8">
@@ -80,6 +82,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </FrontendLayout>
   );
 }
