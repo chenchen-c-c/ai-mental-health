@@ -69,9 +69,12 @@ export default function ChatPage() {
     const savedMessages = localStorage.getItem('chatMessages');
     const savedHistory = localStorage.getItem('chatSessionHistory');
     
+    let currentMessages = [];
+    
     if (savedMessages) {
       try {
-        setMessages(JSON.parse(savedMessages));
+        currentMessages = JSON.parse(savedMessages);
+        setMessages(currentMessages);
       } catch (e) {
         localStorage.removeItem('chatMessages');
       }
@@ -82,8 +85,9 @@ export default function ChatPage() {
         content: '你好！我是小暖，你的AI情绪助手。很高兴陪伴你，为你提供温暖的心理支持。请告诉我，今天你感觉怎么样？有什么想要分享的吗？',
         timestamp: new Date().toLocaleString(),
       };
-      setMessages([welcomeMsg]);
-      localStorage.setItem('chatMessages', JSON.stringify([welcomeMsg]));
+      currentMessages = [welcomeMsg];
+      setMessages(currentMessages);
+      localStorage.setItem('chatMessages', JSON.stringify(currentMessages));
     }
 
     if (savedHistory) {
@@ -91,6 +95,19 @@ export default function ChatPage() {
         setSessionHistory(JSON.parse(savedHistory));
       } catch (e) {
         localStorage.removeItem('chatSessionHistory');
+      }
+    } else if (currentMessages.length > 0) {
+      const lastAiMsg = [...currentMessages].reverse().find(msg => msg.type === 'ai');
+      if (lastAiMsg) {
+        const initialHistory = [{
+          id: Date.now(),
+          name: 'AI情绪助手',
+          time: lastAiMsg.timestamp,
+          preview: lastAiMsg.content.length > 30 ? lastAiMsg.content.substring(0, 30) + '...' : lastAiMsg.content,
+          unread: 0,
+        }];
+        setSessionHistory(initialHistory);
+        localStorage.setItem('chatSessionHistory', JSON.stringify(initialHistory));
       }
     }
   }, []);
