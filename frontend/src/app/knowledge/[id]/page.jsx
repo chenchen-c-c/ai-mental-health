@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { Tag, Empty, Button } from 'antd';
+import { Empty, Button } from 'antd';
 import { ArrowLeftOutlined, CalendarOutlined, ClockCircleOutlined, BookOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import FrontendLayout from '../../components/FrontendLayout';
@@ -12,8 +12,7 @@ const mockArticles = [
     title: '正念练习入门指南：如何在喧嚣中找到内心的平静',
     summary: '正念是一种通过有意识地关注当下而不做评判的方式来培养觉察力的心理练习。',
     cover: '',
-    coverGradient: 'from-blue-400 to-cyan-300',
-    coverIcon: '🌿',
+    coverBg: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
     category: 'emotion',
     categoryName: '情绪调节',
     publishTime: '2024-01-15',
@@ -100,8 +99,7 @@ const mockArticles = [
     title: '学生心理压力应对策略：轻松应对考试焦虑',
     summary: '学生群体面临着学业、社交等多方面的压力。本文分享了科学有效的压力管理方法。',
     cover: '',
-    coverGradient: 'from-teal-400 to-green-300',
-    coverIcon: '📚',
+    coverBg: 'linear-gradient(135deg, #22c55e, #14b8a6)',
     category: 'stress',
     categoryName: '压力缓解',
     publishTime: '2024-01-12',
@@ -175,8 +173,7 @@ const mockArticles = [
     title: '睡眠质量与心理健康：打造完美的睡眠习惯',
     summary: '良好的睡眠是心理健康的基石。本文探讨了睡眠与情绪、压力之间的关系。',
     cover: '',
-    coverGradient: 'from-indigo-400 to-purple-300',
-    coverIcon: '🌙',
+    coverBg: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
     category: 'sleep',
     categoryName: '睡眠改善',
     publishTime: '2024-01-10',
@@ -242,8 +239,7 @@ const mockArticles = [
     title: '情绪调节的五个有效策略：掌控自己的情绪',
     summary: '情绪调节是一项重要的心理技能。本文介绍了深呼吸、认知重构、运动等五种科学有效的方法。',
     cover: '',
-    coverGradient: 'from-blue-400 to-teal-300',
-    coverIcon: '💭',
+    coverBg: 'linear-gradient(135deg, #3b82f6, #6366f1)',
     category: 'emotion',
     categoryName: '情绪调节',
     publishTime: '2024-01-08',
@@ -300,8 +296,7 @@ const mockArticles = [
     title: '职场压力管理指南：在工作中保持身心健康',
     summary: '职场压力是现代社会普遍面临的问题。本文提供了从时间管理到心理调适的全面策略。',
     cover: '',
-    coverGradient: 'from-teal-400 to-cyan-300',
-    coverIcon: '💼',
+    coverBg: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
     category: 'stress',
     categoryName: '压力缓解',
     publishTime: '2024-01-05',
@@ -342,8 +337,7 @@ const mockArticles = [
     title: '自我成长之旅：如何成为更好的自己',
     summary: '自我成长是一生的课题。本文探讨了自我觉察、设定目标、持续学习等方面。',
     cover: '',
-    coverGradient: 'from-green-400 to-teal-300',
-    coverIcon: '🌱',
+    coverBg: 'linear-gradient(135deg, #10b981, #22c55e)',
     category: 'growth',
     categoryName: '自我成长',
     publishTime: '2024-01-02',
@@ -392,8 +386,7 @@ const mockArticles = [
     title: '深度睡眠的奥秘：让大脑真正得到休息',
     summary: '深度睡眠对于身体恢复和大脑健康至关重要。本文解析了睡眠周期的奥秘。',
     cover: '',
-    coverGradient: 'from-indigo-400 to-blue-300',
-    coverIcon: '⭐',
+    coverBg: 'linear-gradient(135deg, #6366f1, #3b82f6)',
     category: 'sleep',
     categoryName: '睡眠改善',
     publishTime: '2023-12-28',
@@ -440,8 +433,7 @@ const mockArticles = [
     title: '积极心理学：培养乐观向上的心态',
     summary: '积极心理学关注人类的积极品质和潜力。本文介绍了积极思考、感恩练习等方法。',
     cover: '',
-    coverGradient: 'from-orange-400 to-amber-300',
-    coverIcon: '☀️',
+    coverBg: 'linear-gradient(135deg, #f97316, #fbbf24)',
     category: 'growth',
     categoryName: '自我成长',
     publishTime: '2023-12-25',
@@ -480,10 +472,10 @@ const mockArticles = [
 ];
 
 const categoryColors = {
-  emotion: { bg: 'bg-blue-100', text: 'text-blue-700' },
-  stress: { bg: 'bg-teal-100', text: 'text-teal-700' },
-  sleep: { bg: 'bg-indigo-100', text: 'text-indigo-700' },
-  growth: { bg: 'bg-green-100', text: 'text-green-700' },
+  emotion: { bgColor: '#dbeafe', textColor: '#1d4ed8' },
+  stress: { bgColor: '#ccfbf1', textColor: '#0d9488' },
+  sleep: { bgColor: '#e0e7ff', textColor: '#4f46e5' },
+  growth: { bgColor: '#dcfce7', textColor: '#16a34a' },
 };
 
 function renderContent(content) {
@@ -491,27 +483,53 @@ function renderContent(content) {
     switch (item.type) {
       case 'heading':
         return (
-          <h2 key={index} className="text-2xl font-bold text-gray-800 mt-10 mb-4 pb-2 border-b border-gray-100">
+          <h2 key={index} style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#1e293b',
+            marginTop: '32px',
+            marginBottom: '12px',
+            paddingBottom: '8px',
+            borderBottom: '1px solid #f1f5f9',
+          }}>
             {item.text}
           </h2>
         );
       case 'subheading':
         return (
-          <h3 key={index} className="text-xl font-semibold text-gray-700 mt-8 mb-3">
+          <h3 key={index} style={{
+            fontSize: '16px',
+            fontWeight: '600',
+            color: '#334155',
+            marginTop: '24px',
+            marginBottom: '8px',
+          }}>
             {item.text}
           </h3>
         );
       case 'paragraph':
         return (
-          <p key={index} className="text-gray-600 leading-loose mb-4" dangerouslySetInnerHTML={{
-            __html: item.text.replace(/<highlight>(.*?)<\/highlight>/g, '<span class="bg-teal-100 text-teal-700 px-1 rounded">$1</span>')
+          <p key={index} style={{
+            color: '#475569',
+            lineHeight: '1.8',
+            marginBottom: '16px',
+            fontSize: '15px',
+          }} dangerouslySetInnerHTML={{
+            __html: item.text.replace(/<highlight>(.*?)<\/highlight>/g, '<span style="background: #ccfbf1; color: #0d9488; padding: 2px 6px; border-radius: 4px;">$1</span>')
           }} />
         );
       case 'list':
         return (
-          <ul key={index} className="list-disc list-inside text-gray-600 leading-loose mb-4 space-y-2">
+          <ul key={index} style={{
+            listStyle: 'disc',
+            listStylePosition: 'inside',
+            color: '#475569',
+            lineHeight: '1.8',
+            marginBottom: '16px',
+            paddingLeft: '8px',
+          }}>
             {item.items.map((listItem, listIndex) => (
-              <li key={listIndex}>{listItem}</li>
+              <li key={listIndex} style={{ marginBottom: '8px', fontSize: '15px' }}>{listItem}</li>
             ))}
           </ul>
         );
@@ -540,16 +558,16 @@ export default function KnowledgeDetailPage({ params }) {
   if (!article) {
     return (
       <FrontendLayout>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 flex items-center justify-center py-20">
-          <div className="text-center">
-            <Empty
-              description={
-                <span className="text-gray-500">未找到该文章</span>
-              }
-            />
+        <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 50%, #ecfeff 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 24px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <Empty description={<span style={{ color: '#64748b' }}>未找到该文章</span>} />
             <Button
               type="primary"
-              className="mt-6 bg-gradient-to-r from-teal-500 to-cyan-500 border-none"
+              style={{
+                marginTop: '24px',
+                background: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
+                border: 'none',
+              }}
             >
               <Link href="/knowledge">返回知识库</Link>
             </Button>
@@ -563,97 +581,106 @@ export default function KnowledgeDetailPage({ params }) {
 
   return (
     <FrontendLayout>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex items-center gap-3 mb-8">
-            <Link href="/knowledge">
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #eff6ff 0%, #ffffff 50%, #ecfeff 100%)' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '80px 24px 48px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
+            <Link href="/knowledge" style={{ textDecoration: 'none' }}>
               <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
-                className="text-gray-600 hover:text-teal-600"
+                style={{ color: '#475569', fontSize: '14px', padding: '0' }}
               >
-                返回列表
+                返回知识库
               </Button>
             </Link>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="relative">
-              {article.cover ? (
-                <img
-                  src={article.cover}
-                  alt={article.title}
-                  className="w-full h-64 object-cover"
-                />
-              ) : (
-                <div className={`w-full h-64 bg-gradient-to-br ${article.coverGradient} flex items-center justify-center`}>
-                  <span className="text-7xl opacity-80">{article.coverIcon}</span>
-                </div>
-              )}
-              <div className="absolute bottom-4 left-6 right-6">
-                <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-medium ${categoryStyle.bg} ${categoryStyle.text}`}>
-                  {article.categoryName}
-                </span>
-              </div>
+          <div style={{ background: '#ffffff', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)' }}>
+            <div style={{ width: '100%', height: '200px', background: article.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              <BookOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: '64px' }} />
+              <span style={{
+                position: 'absolute',
+                bottom: '16px',
+                left: '24px',
+                padding: '6px 16px',
+                borderRadius: '16px',
+                fontSize: '12px',
+                fontWeight: '500',
+                background: categoryStyle.bgColor,
+                color: categoryStyle.textColor,
+              }}>
+                {article.categoryName}
+              </span>
             </div>
 
-            <div className="p-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4">
+            <div style={{ padding: '32px' }}>
+              <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#1e293b', marginBottom: '16px' }}>
                 {article.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-8 pb-6 border-b border-gray-100">
-                <span className="flex items-center gap-2">
-                  <CalendarOutlined />
+              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', fontSize: '13px', color: '#94a3b8', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <CalendarOutlined style={{ fontSize: '14px' }} />
                   {article.publishTime}
                 </span>
-                <span className="flex items-center gap-2">
-                  <ClockCircleOutlined />
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ClockCircleOutlined style={{ fontSize: '14px' }} />
                   {article.views} 阅读
                 </span>
               </div>
 
-              <div className="prose prose-gray max-w-none">
+              <div>
                 {renderContent(article.content)}
               </div>
             </div>
           </div>
 
           {recommended.length > 0 && (
-            <div className="mt-12">
-              <div className="flex items-center gap-3 mb-6">
-                <BookOutlined className="text-teal-600" />
-                <h2 className="text-xl font-bold text-gray-800">推荐阅读</h2>
+            <div style={{ marginTop: '40px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                <BookOutlined style={{ color: '#14b8a6', fontSize: '20px' }} />
+                <h2 style={{ fontSize: '18px', fontWeight: '700', color: '#1e293b' }}>推荐阅读</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommended.map(item => (
-                  <Link
-                    key={item.id}
-                    href={`/knowledge/${item.id}`}
-                    className="group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300"
-                  >
-                    {item.cover ? (
-                      <img
-                        src={item.cover}
-                        alt={item.title}
-                        className="w-full h-32 object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className={`w-full h-32 bg-gradient-to-br ${item.coverGradient} flex items-center justify-center`}>
-                        <span className="text-4xl opacity-80">{item.coverIcon}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {recommended.map(item => {
+                  const recCatStyle = categoryColors[item.category];
+                  return (
+                    <Link
+                      key={item.id}
+                      href={`/knowledge/${item.id}`}
+                      style={{
+                        background: '#ffffff',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        textDecoration: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+                      }}
+                    >
+                      <div style={{ width: '80px', height: '60px', borderRadius: '10px', background: item.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <BookOutlined style={{ color: 'rgba(255,255,255,0.3)', fontSize: '24px' }} />
                       </div>
-                    )}
-                    <div className="p-4">
-                      <h3 className="text-sm font-medium text-gray-800 line-clamp-2 group-hover:text-teal-600 transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-2">
-                        {item.publishTime}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#1e293b', marginBottom: '4px' }}>{item.title}</h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '12px', color: '#94a3b8' }}>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '8px',
+                            background: recCatStyle.bgColor,
+                            color: recCatStyle.textColor,
+                          }}>
+                            {item.categoryName}
+                          </span>
+                          <span>{item.publishTime}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
