@@ -1,15 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Menu, Dropdown } from 'antd';
-import { LogoutOutlined, UserOutlined, HomeOutlined, MessageOutlined, BookOutlined } from '@ant-design/icons';
+import { Button, Menu, Dropdown, Drawer } from 'antd';
+import { LogoutOutlined, UserOutlined, HomeOutlined, MessageOutlined, BookOutlined, FileTextOutlined, MenuOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const navItems = [
   { key: '/', label: <Link href="/">首页</Link>, icon: <HomeOutlined /> },
   { key: '/chat', label: <Link href="/chat">AI情绪倾诉</Link>, icon: <MessageOutlined /> },
   { key: '/journal', label: <Link href="/journal">心情日记</Link>, icon: <BookOutlined /> },
+  { key: '/knowledge', label: <Link href="/knowledge">知识库</Link>, icon: <FileTextOutlined /> },
 ];
 
 export default function Navbar() {
@@ -27,8 +28,18 @@ export default function Navbar() {
     return null;
   });
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {}, []);
+
+  const getSelectedKey = () => {
+    if (pathname.startsWith('/knowledge')) {
+      return '/knowledge';
+    }
+    return pathname;
+  };
+
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -64,6 +75,7 @@ export default function Navbar() {
             <Menu 
               mode="horizontal" 
               items={navItems} 
+              selectedKeys={[getSelectedKey()]}
               className="border-none min-w-0"
             />
           </div>
@@ -78,26 +90,80 @@ export default function Navbar() {
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-300 flex items-center justify-center">
                     <UserOutlined className="text-white" />
                   </div>
-                  <span className="text-gray-700 font-medium">{user.username}</span>
+                  <span className="hidden sm:inline text-gray-700 font-medium">{user.username}</span>
                 </div>
               </Dropdown>
             ) : (
               <>
                 <Link href="/login">
-                  <Button type="text" className="text-gray-600 hover:text-blue-500">
+                  <Button type="text" className="hidden sm:block text-gray-600 hover:text-blue-500">
                     登录
                   </Button>
                 </Link>
                 <Link href="/register">
-                  <Button type="primary" className="bg-blue-400 hover:bg-blue-500 border-none">
+                  <Button type="primary" className="hidden sm:block bg-blue-400 hover:bg-blue-500 border-none">
                     注册
                   </Button>
                 </Link>
               </>
             )}
+
+            <Button
+              type="text"
+              icon={<MenuOutlined />}
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden text-gray-600"
+            />
           </div>
         </div>
       </div>
+
+      <Drawer
+        title="心理健康AI助手"
+        placement="right"
+        open={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
+        className="md:hidden"
+      >
+        <div className="space-y-2">
+          {navItems.map((item) => (
+            <Link
+              key={item.key}
+              href={item.key}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`block px-4 py-3 rounded-lg transition-colors ${
+                getSelectedKey() === item.key
+                  ? 'bg-blue-50 text-blue-600 font-medium'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span className="flex items-center gap-3">
+                {item.icon}
+                {item.label.props.children}
+              </span>
+            </Link>
+          ))}
+
+          {!user && (
+            <div className="pt-4 border-t border-gray-100 mt-4 space-y-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+              >
+                登录
+              </Link>
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 text-center bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors"
+              >
+                注册
+              </Link>
+            </div>
+          )}
+        </div>
+      </Drawer>
     </nav>
   );
 }

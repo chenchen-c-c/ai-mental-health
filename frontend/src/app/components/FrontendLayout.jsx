@@ -9,7 +9,7 @@ export default function FrontendLayout({ children }) {
       <ClientOnly>
         <Navbar />
       </ClientOnly>
-      <main className="pt-16">
+      <main className="pt-20">
         {children}
       </main>
     </>

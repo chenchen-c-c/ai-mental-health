@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export default function ClientOnly({ children }) {
+export default function ClientOnly({ children, fallback }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -10,7 +10,7 @@ export default function ClientOnly({ children }) {
   }, []);
 
   if (!mounted) {
-    return null;
+    return fallback || null;
   }
 
   return <>{children}</>;
