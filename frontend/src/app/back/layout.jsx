@@ -12,7 +12,7 @@ import {
   UserOutlined,
 } from '@ant-design/icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const menuItems = [
   { key: '/back/dashboard', label: '数据看板', icon: <BarChartOutlined /> },
@@ -27,6 +27,7 @@ export default function BackLayout({ children }) {
   const [showMenu, setShowMenu] = useState(false);
   const dropdownRef = useRef(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -52,7 +53,7 @@ export default function BackLayout({ children }) {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (showMenu && dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setShowMenu(false);
       }
     };
@@ -61,7 +62,7 @@ export default function BackLayout({ children }) {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showMenu]);
 
   const handleLogout = () => {
     localStorage.removeItem('admin');
@@ -133,6 +134,11 @@ export default function BackLayout({ children }) {
             mode="vertical" 
             items={menuItems}
             selectedKeys={[getSelectedKey()]}
+            onClick={(e) => {
+              if (e.key) {
+                router.push(e.key);
+              }
+            }}
             style={{ 
               background: 'transparent', 
               border: 'none',

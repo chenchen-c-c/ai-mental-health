@@ -1,23 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
 import { Empty, Button } from 'antd';
 import { ArrowLeftOutlined, CalendarOutlined, ClockCircleOutlined, BookOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import FrontendLayout from '../../components/FrontendLayout';
 
-const mockArticles = [
+const categoryColors = {
+  emotion: { bgColor: '#dbeafe', textColor: '#1d4ed8' },
+  stress: { bgColor: '#ccfbf1', textColor: '#0d9488' },
+  sleep: { bgColor: '#e0e7ff', textColor: '#4f46e5' },
+  interpersonal: { bgColor: '#fef3c7', textColor: '#d97706' },
+  foundation: { bgColor: '#dcfce7', textColor: '#16a34a' },
+};
+
+const coverBgMap = {
+  emotion: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
+  stress: 'linear-gradient(135deg, #22c55e, #14b8a6)',
+  sleep: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  interpersonal: 'linear-gradient(135deg, #f97316, #fbbf24)',
+  foundation: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+};
+
+const defaultArticles = [
   {
     id: 1,
     title: '正念练习入门指南：如何在喧嚣中找到内心的平静',
     summary: '正念是一种通过有意识地关注当下而不做评判的方式来培养觉察力的心理练习。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
     category: 'emotion',
     categoryName: '情绪调节',
     publishTime: '2024-01-15',
     views: 1256,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
@@ -100,11 +117,12 @@ const mockArticles = [
     title: '学生心理压力应对策略：轻松应对考试焦虑',
     summary: '学生群体面临着学业、社交等多方面的压力。本文分享了科学有效的压力管理方法。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #22c55e, #14b8a6)',
     category: 'stress',
     categoryName: '压力缓解',
     publishTime: '2024-01-12',
     views: 892,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
@@ -174,11 +192,12 @@ const mockArticles = [
     title: '睡眠质量与心理健康：打造完美的睡眠习惯',
     summary: '良好的睡眠是心理健康的基石。本文探讨了睡眠与情绪、压力之间的关系。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
     category: 'sleep',
     categoryName: '睡眠改善',
     publishTime: '2024-01-10',
     views: 2103,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
@@ -240,11 +259,12 @@ const mockArticles = [
     title: '情绪调节的五个有效策略：掌控自己的情绪',
     summary: '情绪调节是一项重要的心理技能。本文介绍了深呼吸、认知重构、运动等五种科学有效的方法。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #3b82f6, #6366f1)',
     category: 'emotion',
     categoryName: '情绪调节',
     publishTime: '2024-01-08',
     views: 1567,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
@@ -297,11 +317,12 @@ const mockArticles = [
     title: '职场压力管理指南：在工作中保持身心健康',
     summary: '职场压力是现代社会普遍面临的问题。本文提供了从时间管理到心理调适的全面策略。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
     category: 'stress',
     categoryName: '压力缓解',
     publishTime: '2024-01-05',
     views: 1342,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
@@ -335,151 +356,83 @@ const mockArticles = [
   },
   {
     id: 6,
-    title: '自我成长之旅：如何成为更好的自己',
-    summary: '自我成长是一生的课题。本文探讨了自我觉察、设定目标、持续学习等方面。',
+    title: '建立健康的人际关系',
+    summary: '良好的人际关系是心理健康的重要支撑。本文探讨了如何建立和维护健康的人际关系，提高社交能力。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #10b981, #22c55e)',
-    category: 'growth',
-    categoryName: '自我成长',
+    category: 'interpersonal',
+    categoryName: '人际关系',
     publishTime: '2024-01-02',
     views: 987,
+    author: '系统管理员',
+    status: 'published',
     content: [
       {
         type: 'paragraph',
-        text: '自我成长是一生的课题。每个人都有潜力成为更好的自己，关键在于持续地学习、反思和行动。本文将为你提供一份全面的自我成长指南。',
+        text: '人际关系是我们生活中不可或缺的一部分，它对我们的心理健康、幸福感和生活质量都有着深远的影响。建立和维护健康的人际关系，是每个人都需要学习的重要技能。',
       },
       {
         type: 'heading',
-        text: '自我觉察',
+        text: '什么是健康的人际关系',
       },
       {
         type: 'paragraph',
-        text: '<highlight>自我觉察是自我成长的起点</highlight>。了解自己的优点和不足，认识自己的价值观和目标，才能明确前进的方向。',
+        text: '<highlight>健康的人际关系是建立在相互尊重、理解和支持的基础上的</highlight>。在这样的关系中，每个人都能感到被接纳和被重视，同时也能给予他人同样的支持。',
       },
       {
         type: 'heading',
-        text: '设定明确的目标',
+        text: '建立健康人际关系的技巧',
+      },
+      {
+        type: 'subheading',
+        text: '1. 学会倾听',
       },
       {
         type: 'paragraph',
-        text: '设定具体、可衡量、可实现的目标，并制定详细的行动计划。将大目标分解为小步骤，一步步实现。',
+        text: '倾听是沟通的基础。真正地倾听对方的话语，理解对方的感受和需求，是建立信任和良好关系的第一步。',
       },
       {
-        type: 'heading',
-        text: '持续学习',
-      },
-      {
-        type: 'paragraph',
-        text: '保持好奇心，不断学习新知识、新技能。阅读、学习课程、参加培训、与他人交流，都是很好的学习方式。',
-      },
-      {
-        type: 'heading',
-        text: '接受挑战',
+        type: 'subheading',
+        text: '2. 表达自己',
       },
       {
         type: 'paragraph',
-        text: '成长往往发生在舒适区之外。勇敢地接受新的挑战，即使会遇到困难和挫折，也是宝贵的学习机会。',
-      },
-    ],
-  },
-  {
-    id: 7,
-    title: '深度睡眠的奥秘：让大脑真正得到休息',
-    summary: '深度睡眠对于身体恢复和大脑健康至关重要。本文解析了睡眠周期的奥秘。',
-    cover: '',
-    coverBg: 'linear-gradient(135deg, #6366f1, #3b82f6)',
-    category: 'sleep',
-    categoryName: '睡眠改善',
-    publishTime: '2023-12-28',
-    views: 1892,
-    content: [
-      {
-        type: 'paragraph',
-        text: '我们每天都在睡觉，但你真的了解睡眠吗？睡眠不仅仅是休息，它对大脑功能、记忆力、情绪调节都有着至关重要的作用。本文将带你了解深度睡眠的奥秘。',
+        text: '在关系中，学会清晰地表达自己的想法和感受，同时尊重他人的观点，是保持健康沟通的关键。',
       },
       {
-        type: 'heading',
-        text: '睡眠周期的结构',
+        type: 'subheading',
+        text: '3. 尊重边界',
       },
       {
         type: 'paragraph',
-        text: '一个完整的睡眠周期大约持续90分钟，包括浅睡眠、深睡眠和快速眼动睡眠三个阶段。每个阶段都有不同的特点和功能。',
-      },
-      {
-        type: 'heading',
-        text: '深度睡眠的重要性',
-      },
-      {
-        type: 'paragraph',
-        text: '<highlight>深度睡眠是睡眠中最重要的阶段</highlight>。在深度睡眠期间，身体会分泌生长激素，促进身体修复和生长。同时，深度睡眠对于巩固记忆、调节情绪也非常重要。',
-      },
-      {
-        type: 'heading',
-        text: '如何提高深度睡眠质量',
-      },
-      {
-        type: 'list',
-        items: [
-          '保持规律的作息时间',
-          '创建黑暗、安静的睡眠环境',
-          '避免睡前使用电子设备',
-          '适度的体育锻炼',
-          '避免睡前摄入咖啡因和酒精',
-        ],
-      },
-    ],
-  },
-  {
-    id: 8,
-    title: '积极心理学：培养乐观向上的心态',
-    summary: '积极心理学关注人类的积极品质和潜力。本文介绍了积极思考、感恩练习等方法。',
-    cover: '',
-    coverBg: 'linear-gradient(135deg, #f97316, #fbbf24)',
-    category: 'growth',
-    categoryName: '自我成长',
-    publishTime: '2023-12-25',
-    views: 1456,
-    content: [
-      {
-        type: 'paragraph',
-        text: '积极心理学是心理学的一个重要分支，它关注人类的积极品质、优势和潜力，而不仅仅是治疗心理问题。通过培养积极的心态，我们可以提高幸福感、增强韧性，更好地应对生活中的挑战。',
-      },
-      {
-        type: 'heading',
-        text: '积极思考的力量',
-      },
-      {
-        type: 'paragraph',
-        text: '<highlight>积极思考并不是盲目乐观</highlight>，而是一种看待事物的方式。即使在困难面前，也能看到其中的机会和成长的可能。积极思考可以帮助我们减轻压力、提高免疫力、改善人际关系。',
-      },
-      {
-        type: 'heading',
-        text: '感恩练习',
-      },
-      {
-        type: 'paragraph',
-        text: '每天花几分钟时间思考自己所拥有的，感谢生活中的美好事物。感恩可以帮助我们关注生活中的积极方面，减少抱怨和不满。',
-      },
-      {
-        type: 'heading',
-        text: '寻找意义和目标',
-      },
-      {
-        type: 'paragraph',
-        text: '拥有明确的人生目标和意义，可以给我们带来方向感和动力。思考什么对自己最重要，追求那些能够让自己感到充实和满足的事情。',
+        text: '每个人都有自己的边界和个人空间，尊重他人的边界，同时也维护好自己的边界，是健康人际关系的重要组成部分。',
       },
     ],
   },
 ];
 
-const categoryColors = {
-  emotion: { bgColor: '#dbeafe', textColor: '#1d4ed8' },
-  stress: { bgColor: '#ccfbf1', textColor: '#0d9488' },
-  sleep: { bgColor: '#e0e7ff', textColor: '#4f46e5' },
-  growth: { bgColor: '#dcfce7', textColor: '#16a34a' },
+const getArticlesFromStorage = () => {
+  const stored = localStorage.getItem('articles');
+  if (stored) {
+    try {
+      const articles = JSON.parse(stored);
+      return articles.map(a => ({
+        ...a,
+        coverBg: coverBgMap[a.category] || 'linear-gradient(135deg, #14b8a6, #06b6d4)',
+        content: a.content || defaultArticles.find(d => d.id === a.id)?.content || [],
+      }));
+    } catch (e) {
+      return defaultArticles;
+    }
+  }
+  localStorage.setItem('articles', JSON.stringify(defaultArticles));
+  return defaultArticles;
 };
 
 function renderContent(content) {
+  if (!content || content.length === 0) {
+    return <p style={{ color: '#64748b', lineHeight: '1.8', fontSize: '15px' }}>暂无详细内容</p>;
+  }
+  
   return content.map((item, index) => {
     switch (item.type) {
       case 'heading':
@@ -548,12 +501,13 @@ export default function KnowledgeDetailPage() {
 
   useEffect(() => {
     setIsClient(true);
+    const allArticles = getArticlesFromStorage();
     const id = parseInt(params.id);
-    const foundArticle = mockArticles.find(a => a.id === id);
+    const foundArticle = allArticles.find(a => a.id === id);
     setArticle(foundArticle);
 
     if (foundArticle) {
-      const otherArticles = mockArticles.filter(a => a.id !== id);
+      const otherArticles = allArticles.filter(a => a.id !== id && a.status === 'published');
       const shuffled = otherArticles.sort(() => Math.random() - 0.5);
       setRecommended(shuffled.slice(0, 3));
     }
@@ -585,7 +539,8 @@ export default function KnowledgeDetailPage() {
     );
   }
 
-  const categoryStyle = categoryColors[article.category];
+  const categoryStyle = categoryColors[article.category] || categoryColors.foundation;
+  const coverBg = article.coverBg || coverBgMap[article.category] || 'linear-gradient(135deg, #14b8a6, #06b6d4)';
 
   return (
     <FrontendLayout>
@@ -604,7 +559,7 @@ export default function KnowledgeDetailPage() {
           </div>
 
           <div style={{ background: '#ffffff', borderRadius: '20px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)' }}>
-            <div style={{ width: '100%', height: '200px', background: article.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            <div style={{ width: '100%', height: '200px', background: coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
               <BookOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: '64px' }} />
               <span style={{
                 position: 'absolute',
@@ -617,7 +572,7 @@ export default function KnowledgeDetailPage() {
                 background: categoryStyle.bgColor,
                 color: categoryStyle.textColor,
               }}>
-                {article.categoryName}
+                {article.categoryName || article.category}
               </span>
             </div>
 
@@ -629,7 +584,7 @@ export default function KnowledgeDetailPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '24px', fontSize: '13px', color: '#94a3b8', marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <CalendarOutlined style={{ fontSize: '14px' }} />
-                  {article.publishTime}
+                  {article.publishTime?.split(' ')[0] || article.publishTime}
                 </span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ClockCircleOutlined style={{ fontSize: '14px' }} />
@@ -652,7 +607,8 @@ export default function KnowledgeDetailPage() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {recommended.map(item => {
-                  const recCatStyle = categoryColors[item.category];
+                  const recCatStyle = categoryColors[item.category] || categoryColors.foundation;
+                  const recCoverBg = item.coverBg || coverBgMap[item.category] || 'linear-gradient(135deg, #14b8a6, #06b6d4)';
                   return (
                     <Link
                       key={item.id}
@@ -669,7 +625,7 @@ export default function KnowledgeDetailPage() {
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                       }}
                     >
-                      <div style={{ width: '80px', height: '60px', borderRadius: '10px', background: item.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: '80px', height: '60px', borderRadius: '10px', background: recCoverBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <BookOutlined style={{ color: 'rgba(255,255,255,0.3)', fontSize: '24px' }} />
                       </div>
                       <div style={{ flex: 1 }}>
@@ -681,9 +637,9 @@ export default function KnowledgeDetailPage() {
                             background: recCatStyle.bgColor,
                             color: recCatStyle.textColor,
                           }}>
-                            {item.categoryName}
+                            {item.categoryName || item.category}
                           </span>
-                          <span>{item.publishTime}</span>
+                          <span>{item.publishTime?.split(' ')[0] || item.publishTime}</span>
                         </div>
                       </div>
                     </Link>

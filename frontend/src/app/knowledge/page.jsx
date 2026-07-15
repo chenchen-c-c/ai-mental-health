@@ -11,10 +11,27 @@ const categories = [
   { id: 'emotion', name: '情绪调节' },
   { id: 'stress', name: '压力缓解' },
   { id: 'sleep', name: '睡眠改善' },
-  { id: 'growth', name: '自我成长' },
+  { id: 'interpersonal', name: '人际关系' },
+  { id: 'foundation', name: '心理健康基础' },
 ];
 
-const mockArticles = [
+const categoryStyles = {
+  emotion: { backgroundColor: '#dbeafe', color: '#1d4ed8' },
+  stress: { backgroundColor: '#ccfbf1', color: '#0d9488' },
+  sleep: { backgroundColor: '#e0e7ff', color: '#4f46e5' },
+  interpersonal: { backgroundColor: '#fef3c7', color: '#d97706' },
+  foundation: { backgroundColor: '#dcfce7', color: '#16a34a' },
+};
+
+const coverBgMap = {
+  emotion: 'linear-gradient(135deg, #14b8a6, #06b6d4)',
+  stress: 'linear-gradient(135deg, #22c55e, #14b8a6)',
+  sleep: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+  interpersonal: 'linear-gradient(135deg, #f97316, #fbbf24)',
+  foundation: 'linear-gradient(135deg, #3b82f6, #6366f1)',
+};
+
+const defaultArticles = [
   {
     id: 1,
     title: '正念练习入门指南：如何在喧嚣中找到内心的平静',
@@ -26,6 +43,7 @@ const mockArticles = [
     publishTime: '2024-01-15',
     views: 1256,
     author: '系统管理员',
+    status: 'published',
   },
   {
     id: 2,
@@ -38,6 +56,7 @@ const mockArticles = [
     publishTime: '2024-01-12',
     views: 892,
     author: '系统管理员',
+    status: 'published',
   },
   {
     id: 3,
@@ -50,6 +69,7 @@ const mockArticles = [
     publishTime: '2024-01-10',
     views: 2103,
     author: '系统管理员',
+    status: 'published',
   },
   {
     id: 4,
@@ -62,6 +82,7 @@ const mockArticles = [
     publishTime: '2024-01-08',
     views: 1567,
     author: '系统管理员',
+    status: 'published',
   },
   {
     id: 5,
@@ -74,32 +95,46 @@ const mockArticles = [
     publishTime: '2024-01-05',
     views: 1342,
     author: '系统管理员',
+    status: 'published',
   },
   {
     id: 6,
-    title: '自我成长之旅：如何成为更好的自己',
-    summary: '自我成长是一生的课题。本文探讨了自我觉察、设定目标、持续学习等方面，为你提供一份全面的自我成长指南，帮助你实现个人成长与蜕变。',
+    title: '建立健康的人际关系',
+    summary: '良好的人际关系是心理健康的重要支撑。本文探讨了如何建立和维护健康的人际关系，提高社交能力。',
     cover: '',
-    coverBg: 'linear-gradient(135deg, #10b981, #22c55e)',
-    category: 'growth',
-    categoryName: '自我成长',
+    coverBg: 'linear-gradient(135deg, #f97316, #fbbf24)',
+    category: 'interpersonal',
+    categoryName: '人际关系',
     publishTime: '2024-01-02',
     views: 987,
     author: '系统管理员',
+    status: 'published',
   },
 ];
 
-const categoryStyles = {
-  emotion: { backgroundColor: '#dbeafe', color: '#1d4ed8' },
-  stress: { backgroundColor: '#ccfbf1', color: '#0d9488' },
-  sleep: { backgroundColor: '#e0e7ff', color: '#4f46e5' },
-  growth: { backgroundColor: '#dcfce7', color: '#16a34a' },
+const getArticlesFromStorage = () => {
+  const stored = localStorage.getItem('articles');
+  if (stored) {
+    try {
+      const articles = JSON.parse(stored);
+      return articles.map(a => ({
+        ...a,
+        coverBg: coverBgMap[a.category] || 'linear-gradient(135deg, #14b8a6, #06b6d4)',
+        summary: a.summary || '暂无简介',
+      }));
+    } catch (e) {
+      return defaultArticles;
+    }
+  }
+  localStorage.setItem('articles', JSON.stringify(defaultArticles));
+  return defaultArticles;
 };
 
 export default function KnowledgePage() {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isClient, setIsClient] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     setIsClient(true);
@@ -108,12 +143,14 @@ export default function KnowledgePage() {
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
+    
+    setArticles(getArticlesFromStorage());
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const filteredArticles = activeCategory === 'all'
-    ? mockArticles
-    : mockArticles.filter(article => article.category === activeCategory);
+    ? articles.filter(a => a.status === 'published')
+    : articles.filter(a => a.category === activeCategory && a.status === 'published');
 
   if (!isClient) {
     return null;
@@ -158,6 +195,8 @@ export default function KnowledgePage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {filteredArticles.map(article => {
                 const style = categoryStyles[article.category] || {};
+                const foundCategory = categories.find(c => c.id === article.category);
+                const categoryName = foundCategory ? foundCategory.name : article.categoryName || article.category;
                 return (
                   <Link
                     key={article.id}
@@ -191,7 +230,7 @@ export default function KnowledgePage() {
                           </p>
                         </div>
                         <span style={{ ...style, padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                          {article.categoryName}
+                          {categoryName}
                         </span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginTop: '16px', fontSize: '12px', color: '#94a3b8' }}>
@@ -201,7 +240,7 @@ export default function KnowledgePage() {
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <CalendarOutlined style={{ fontSize: '14px' }} />
-                          {article.publishTime}
+                          {article.publishTime?.split(' ')[0] || article.publishTime}
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <EyeOutlined style={{ fontSize: '14px' }} />
