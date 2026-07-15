@@ -4,30 +4,30 @@ import { useState } from 'react';
 import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
   const handleSubmit = (values) => {
     setLoading(true);
 
-    setTimeout(() => {
-      if (values.username === 'user' && values.password === '123456') {
-        const userData = {
-          username: values.username,
-          role: 'user',
-        };
-        localStorage.setItem('user', JSON.stringify(userData));
-        document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=${30 * 24 * 60 * 60}`;
-        message.success('登录成功');
-        router.push('/');
-      } else {
-        message.error('账号或密码错误，请使用：user / 123456');
-      }
+    if (values.username === 'user' && values.password === '123456') {
+      localStorage.setItem('user', JSON.stringify({ username: 'user', role: 'user' }));
+      localStorage.removeItem('admin');
+      message.success('登录成功');
+      document.location.href = '/';
+    } else if (values.username === 'admin' && values.password === '123456') {
+      const adminData = JSON.stringify({ username: 'admin', role: 'admin' });
+      localStorage.setItem('admin', adminData);
+      localStorage.removeItem('user');
+      document.cookie = `admin=${encodeURIComponent(adminData)}; path=/; max-age=${30 * 24 * 60 * 60}`;
+      document.cookie = 'user=; path=/; max-age=0';
+      message.success('管理员登录成功');
+      document.location.href = '/back/dashboard';
+    } else {
+      message.error('账号或密码错误');
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (
@@ -113,8 +113,11 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+            <p className="text-gray-400 text-sm text-center mb-2">
+              用户账号：<span className="text-teal-600 font-medium">user</span> / <span className="text-teal-600 font-medium">123456</span>
+            </p>
             <p className="text-gray-400 text-sm text-center">
-              Mock账号：<span className="text-teal-600 font-medium">user</span> / <span className="text-teal-600 font-medium">123456</span>
+              管理员账号：<span className="text-purple-600 font-medium">admin</span> / <span className="text-purple-600 font-medium">123456</span>
             </p>
           </div>
         </div>

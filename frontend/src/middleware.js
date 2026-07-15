@@ -4,16 +4,16 @@ export function middleware(request) {
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith('/back')) {
-    const userCookie = request.cookies.get('user');
+    const adminCookie = request.cookies.get('admin');
     
-    if (!userCookie) {
+    if (!adminCookie) {
       const loginUrl = new URL('/login', request.nextUrl.origin);
       return NextResponse.redirect(loginUrl);
     }
 
     try {
-      const user = JSON.parse(userCookie.value);
-      if (!user) {
+      const admin = JSON.parse(adminCookie.value);
+      if (!admin || admin.role !== 'admin') {
         const loginUrl = new URL('/login', request.nextUrl.origin);
         return NextResponse.redirect(loginUrl);
       }
