@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { Empty, Button } from 'antd';
 import { ArrowLeftOutlined, CalendarOutlined, ClockCircleOutlined, BookOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -539,12 +540,15 @@ function renderContent(content) {
   });
 }
 
-export default function KnowledgeDetailPage({ params }) {
-  const id = parseInt(use(params).id);
+export default function KnowledgeDetailPage() {
+  const params = useParams();
   const [article, setArticle] = useState(null);
   const [recommended, setRecommended] = useState([]);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    const id = parseInt(params.id);
     const foundArticle = mockArticles.find(a => a.id === id);
     setArticle(foundArticle);
 
@@ -553,7 +557,11 @@ export default function KnowledgeDetailPage({ params }) {
       const shuffled = otherArticles.sort(() => Math.random() - 0.5);
       setRecommended(shuffled.slice(0, 3));
     }
-  }, [id]);
+  }, [params]);
+
+  if (!isClient) {
+    return null;
+  }
 
   if (!article) {
     return (

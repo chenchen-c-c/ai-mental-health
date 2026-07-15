@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tag, Empty } from 'antd';
 import { BookOutlined, CalendarOutlined, UserOutlined, EyeOutlined } from '@ant-design/icons';
 import Link from 'next/link';
@@ -89,19 +89,35 @@ const mockArticles = [
   },
 ];
 
-const categoryColors = {
-  emotion: { badge: 'background: #dbeafe; color: #1d4ed8; border: none;' },
-  stress: { badge: 'background: #ccfbf1; color: #0d9488; border: none;' },
-  sleep: { badge: 'background: #e0e7ff; color: #4f46e5; border: none;' },
-  growth: { badge: 'background: #dcfce7; color: #16a34a; border: none;' },
+const categoryStyles = {
+  emotion: { backgroundColor: '#dbeafe', color: '#1d4ed8' },
+  stress: { backgroundColor: '#ccfbf1', color: '#0d9488' },
+  sleep: { backgroundColor: '#e0e7ff', color: '#4f46e5' },
+  growth: { backgroundColor: '#dcfce7', color: '#16a34a' },
 };
 
 export default function KnowledgePage() {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [isClient, setIsClient] = useState(false);
+  const [isMobile, setIsMobile] = useState(true);
+
+  useEffect(() => {
+    setIsClient(true);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const filteredArticles = activeCategory === 'all'
     ? mockArticles
     : mockArticles.filter(article => article.category === activeCategory);
+
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <FrontendLayout>
@@ -141,7 +157,7 @@ export default function KnowledgePage() {
           {filteredArticles.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {filteredArticles.map(article => {
-                const categoryStyle = categoryColors[article.category];
+                const style = categoryStyles[article.category] || {};
                 return (
                   <Link
                     key={article.id}
@@ -152,47 +168,45 @@ export default function KnowledgePage() {
                       overflow: 'hidden',
                       boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
                       display: 'flex',
-                      flexDirection: 'column',
+                      flexDirection: isMobile ? 'column' : 'row',
                       textDecoration: 'none',
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', '@media (min-width: 768px)': { flexDirection: 'row' } }}>
-                      <div style={{ width: '100%', height: '160px', '@media (min-width: 768px)': { width: '200px', height: 'auto' }, flexShrink: 0 }}>
-                        {article.cover ? (
-                          <img src={article.cover} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ width: '100%', height: '100%', background: article.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <BookOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: '48px' }} />
-                          </div>
-                        )}
+                    <div style={{ width: isMobile ? '100%' : '200px', height: isMobile ? '160px' : 'auto', flexShrink: 0 }}>
+                      {article.cover ? (
+                        <img src={article.cover} alt={article.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: article.coverBg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <BookOutlined style={{ color: 'rgba(255,255,255,0.2)', fontSize: '48px' }} />
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ padding: '24px', flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>{article.title}</h3>
+                          <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {article.summary}
+                          </p>
+                        </div>
+                        <span style={{ ...style, padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                          {article.categoryName}
+                        </span>
                       </div>
-                      <div style={{ padding: '24px', flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', marginBottom: '8px' }}>{article.title}</h3>
-                            <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                              {article.summary}
-                            </p>
-                          </div>
-                          <span style={{ ...categoryStyle.badge, padding: '6px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                            {article.categoryName}
-                          </span>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginTop: '16px', fontSize: '12px', color: '#94a3b8' }}>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <UserOutlined style={{ fontSize: '14px' }} />
-                            {article.author}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <CalendarOutlined style={{ fontSize: '14px' }} />
-                            {article.publishTime}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <EyeOutlined style={{ fontSize: '14px' }} />
-                            {article.views} 阅读
-                          </span>
-                        </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', marginTop: '16px', fontSize: '12px', color: '#94a3b8' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <UserOutlined style={{ fontSize: '14px' }} />
+                          {article.author}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <CalendarOutlined style={{ fontSize: '14px' }} />
+                          {article.publishTime}
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <EyeOutlined style={{ fontSize: '14px' }} />
+                          {article.views} 阅读
+                        </span>
                       </div>
                     </div>
                   </Link>
