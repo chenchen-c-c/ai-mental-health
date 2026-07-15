@@ -17,7 +17,7 @@ import { usePathname, useRouter } from 'next/navigation';
 const menuItems = [
   { key: '/back/dashboard', label: '数据看板', icon: <BarChartOutlined /> },
   { key: '/back/knowledge', label: '知识文章', icon: <BookOutlined /> },
-  { key: '/back/mood-logs', label: '用户情绪日志', icon: <FileTextOutlined /> },
+  { key: '/back/journal', label: '用户情绪日志', icon: <FileTextOutlined /> },
   { key: '/back/consultation', label: 'AI咨询记录', icon: <MessageOutlined /> },
 ];
 
@@ -72,14 +72,14 @@ export default function BackLayout({ children }) {
 
   const getSelectedKey = () => {
     if (pathname.startsWith('/back/knowledge')) return '/back/knowledge';
-    if (pathname.startsWith('/back/mood-logs')) return '/back/mood-logs';
+    if (pathname.startsWith('/back/journal')) return '/back/journal';
     if (pathname.startsWith('/back/consultation')) return '/back/consultation';
     return '/back/dashboard';
   };
 
   const getPageTitle = () => {
     if (pathname.startsWith('/back/knowledge')) return '知识文章';
-    if (pathname.startsWith('/back/mood-logs')) return '用户情绪日志';
+    if (pathname.startsWith('/back/journal')) return '用户情绪日志';
     if (pathname.startsWith('/back/consultation')) return 'AI咨询记录';
     return '数据看板';
   };

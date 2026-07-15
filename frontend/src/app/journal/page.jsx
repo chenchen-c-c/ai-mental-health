@@ -56,12 +56,17 @@ export default function JournalPage() {
   const handleSave = () => {
     if (!selectedEmotion || !content.trim()) return;
 
+    const user = localStorage.getItem('user');
+    const userData = user ? JSON.parse(user) : { id: 1, username: '匿名用户' };
+
     const newDiary = {
       id: Date.now(),
+      userId: userData.id || 1,
+      userName: userData.username || '匿名用户',
       score,
       emotion: selectedEmotion,
       content: content.trim(),
-      createdAt: new Date().toLocaleString(),
+      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
     };
 
     saveDiaries([newDiary, ...diaries]);
