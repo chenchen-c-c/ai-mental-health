@@ -65,7 +65,7 @@ def register():
         nickname=nickname,
         phone=phone,
         password_hash=hash_password(password),
-        role='user'
+        role=0
     )
     
     db.session.add(new_user)

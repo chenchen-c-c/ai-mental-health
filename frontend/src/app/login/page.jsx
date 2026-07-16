@@ -23,7 +23,7 @@ export default function LoginPage() {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
         
-        if (user.role === 'admin') {
+        if (user.role === 1) {
           localStorage.setItem('admin', JSON.stringify(user));
           localStorage.removeItem('user');
           document.cookie = `admin=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${30 * 24 * 60 * 60}`;

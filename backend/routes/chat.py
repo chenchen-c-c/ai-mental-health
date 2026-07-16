@@ -28,7 +28,7 @@ def get_sessions():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
     
-    if user.role == 'admin':
+    if user.role == 1:
         query = ChatSession.query
     else:
         query = ChatSession.query.filter_by(user_id=user.id)

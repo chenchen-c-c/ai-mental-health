@@ -60,7 +60,7 @@ def admin_required(f):
         if not payload:
             return unauthorized('登录已过期，请重新登录')
         
-        if payload['role'] != 'admin':
+        if payload['role'] != 1:
             return unauthorized('权限不足，仅管理员可访问')
         
         user = User.query.get(payload['user_id'])

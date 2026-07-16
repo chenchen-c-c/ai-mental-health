@@ -57,7 +57,7 @@ if __name__ == '__main__':
             admin_user = User(
                 username='admin',
                 password_hash=hashlib.sha256('123456'.encode()).hexdigest(),
-                role='admin'
+                role=1
             )
             db.session.add(admin_user)
         
@@ -65,7 +65,7 @@ if __name__ == '__main__':
             normal_user = User(
                 username='user',
                 password_hash=hashlib.sha256('123456'.encode()).hexdigest(),
-                role='user'
+                role=0
             )
             db.session.add(normal_user)
         

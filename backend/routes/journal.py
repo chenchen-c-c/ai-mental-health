@@ -13,7 +13,7 @@ def get_journals():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
     
-    if user.role == 'admin':
+    if user.role == 1:
         query = Journal.query
     else:
         query = Journal.query.filter_by(user_id=user.id)
