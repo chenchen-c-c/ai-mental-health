@@ -4,9 +4,9 @@ from extensions import db
 from utils.response import success, error, not_found
 from utils.jwt import auth_required, admin_required
 
-journal_bp = Blueprint('journal', __name__, url_prefix='/journal')
+journal_bp = Blueprint('journal', __name__)
 
-@journal_bp.route('/', methods=['GET'])
+@journal_bp.route('/journal/', methods=['GET'])
 @auth_required
 def get_journals():
     user = request.user
@@ -28,7 +28,7 @@ def get_journals():
         'pages': journals.pages,
     })
 
-@journal_bp.route('/<int:id>', methods=['GET'])
+@journal_bp.route('/journal/<int:id>', methods=['GET'])
 @auth_required
 def get_journal(id):
     user = request.user
@@ -42,7 +42,7 @@ def get_journal(id):
     
     return success(journal.to_dict())
 
-@journal_bp.route('/', methods=['POST'])
+@journal_bp.route('/journal/', methods=['POST'])
 @auth_required
 def create_journal():
     user = request.user
@@ -67,7 +67,7 @@ def create_journal():
     
     return success(new_journal.to_dict(), '日记创建成功')
 
-@journal_bp.route('/<int:id>', methods=['PUT'])
+@journal_bp.route('/journal/<int:id>', methods=['PUT'])
 @auth_required
 def update_journal(id):
     user = request.user
@@ -92,7 +92,7 @@ def update_journal(id):
     
     return success(journal.to_dict(), '日记更新成功')
 
-@journal_bp.route('/<int:id>', methods=['DELETE'])
+@journal_bp.route('/journal/<int:id>', methods=['DELETE'])
 @auth_required
 def delete_journal(id):
     user = request.user

@@ -5,14 +5,14 @@ from utils.response import success, error, not_found
 from utils.jwt import auth_required, admin_required
 from sqlalchemy import or_
 
-knowledge_bp = Blueprint('knowledge', __name__, url_prefix='/knowledge')
+knowledge_bp = Blueprint('knowledge', __name__)
 
-@knowledge_bp.route('/categories', methods=['GET'])
+@knowledge_bp.route('/knowledge/categories', methods=['GET'])
 def get_categories():
     categories = KnowledgeCategory.query.all()
     return success([c.to_dict() for c in categories])
 
-@knowledge_bp.route('/categories', methods=['POST'])
+@knowledge_bp.route('/knowledge/categories', methods=['POST'])
 @admin_required
 def create_category():
     data = request.get_json()
@@ -32,7 +32,7 @@ def create_category():
     
     return success(category.to_dict(), '分类创建成功')
 
-@knowledge_bp.route('/articles', methods=['GET'])
+@knowledge_bp.route('/knowledge/articles', methods=['GET'])
 def get_articles():
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
@@ -64,7 +64,7 @@ def get_articles():
         'pages': articles.pages,
     })
 
-@knowledge_bp.route('/articles/<int:id>', methods=['GET'])
+@knowledge_bp.route('/knowledge/articles/<int:id>', methods=['GET'])
 def get_article(id):
     article = KnowledgeArticle.query.get(id)
     
@@ -81,7 +81,7 @@ def get_article(id):
     
     return success(article.to_dict())
 
-@knowledge_bp.route('/articles', methods=['POST'])
+@knowledge_bp.route('/knowledge/articles', methods=['POST'])
 @admin_required
 def create_article():
     data = request.get_json()
@@ -114,7 +114,7 @@ def create_article():
     
     return success(article.to_dict(), '文章创建成功')
 
-@knowledge_bp.route('/articles/<int:id>', methods=['PUT'])
+@knowledge_bp.route('/knowledge/articles/<int:id>', methods=['PUT'])
 @admin_required
 def update_article(id):
     article = KnowledgeArticle.query.get(id)
@@ -145,7 +145,7 @@ def update_article(id):
     
     return success(article.to_dict(), '文章更新成功')
 
-@knowledge_bp.route('/articles/<int:id>', methods=['DELETE'])
+@knowledge_bp.route('/knowledge/articles/<int:id>', methods=['DELETE'])
 @admin_required
 def delete_article(id):
     article = KnowledgeArticle.query.get(id)

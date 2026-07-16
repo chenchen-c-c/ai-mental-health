@@ -4,9 +4,9 @@ from utils.response import success
 from utils.jwt import admin_required
 from datetime import datetime, timedelta
 
-dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/dashboard')
+dashboard_bp = Blueprint('dashboard', __name__)
 
-@dashboard_bp.route('/stats', methods=['GET'])
+@dashboard_bp.route('/dashboard/stats', methods=['GET'])
 @admin_required
 def get_stats():
     total_users = User.query.count()

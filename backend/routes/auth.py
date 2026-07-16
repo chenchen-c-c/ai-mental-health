@@ -5,12 +5,12 @@ from utils.response import success, error, unauthorized
 from utils.jwt import generate_token
 import hashlib
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', __name__)
 
 def hash_password(password):
     return hashlib.sha256(password.encode()).hexdigest()
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
@@ -37,7 +37,7 @@ def login():
         }
     }, '登录成功')
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
     username = data.get('username')
@@ -84,7 +84,7 @@ def register():
         }
     }, '注册成功')
 
-@auth_bp.route('/info', methods=['GET'])
+@auth_bp.route('/auth/info', methods=['GET'])
 def get_user_info():
     token = request.headers.get('Authorization')
     if not token:

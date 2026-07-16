@@ -22,6 +22,10 @@ app.register_blueprint(chat_bp, url_prefix='/api')
 app.register_blueprint(knowledge_bp, url_prefix='/api')
 app.register_blueprint(dashboard_bp, url_prefix='/api')
 
+@app.route('/api/test-auth')
+def test_auth():
+    return {'code': 200, 'data': 'Auth route test', 'msg': 'OK'}
+
 @app.route('/api/health')
 def health():
     return {'code': 200, 'data': 'OK', 'msg': '健康检查通过'}

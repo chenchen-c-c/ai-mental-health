@@ -5,7 +5,7 @@ from utils.response import success, error, not_found
 from utils.jwt import auth_required, admin_required
 from datetime import datetime
 
-chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
+chat_bp = Blueprint('chat', __name__)
 
 def get_emotion_from_message(content):
     content = content.lower()
@@ -21,7 +21,7 @@ def get_emotion_from_message(content):
         return 'happy'
     return 'neutral'
 
-@chat_bp.route('/sessions', methods=['GET'])
+@chat_bp.route('/chat/sessions', methods=['GET'])
 @auth_required
 def get_sessions():
     user = request.user
@@ -43,7 +43,7 @@ def get_sessions():
         'pages': sessions.pages,
     })
 
-@chat_bp.route('/sessions/<int:id>', methods=['GET'])
+@chat_bp.route('/chat/sessions/<int:id>', methods=['GET'])
 @auth_required
 def get_session(id):
     user = request.user
@@ -62,7 +62,7 @@ def get_session(id):
         'messages': [m.to_dict() for m in messages],
     })
 
-@chat_bp.route('/send', methods=['POST'])
+@chat_bp.route('/chat/send', methods=['POST'])
 @auth_required
 def send_message():
     user = request.user
@@ -134,7 +134,7 @@ def send_message():
         'ai_message': ai_message.to_dict(),
     }, '消息发送成功')
 
-@chat_bp.route('/sessions/<int:id>', methods=['DELETE'])
+@chat_bp.route('/chat/sessions/<int:id>', methods=['DELETE'])
 @auth_required
 def delete_session(id):
     user = request.user
