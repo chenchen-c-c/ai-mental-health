@@ -119,11 +119,15 @@ export default function ChatPage() {
   const handleSend = () => {
     if (!inputValue.trim() || loading) return;
 
+    const user = localStorage.getItem('user');
+    const userData = user ? JSON.parse(user) : { username: '匿名用户', role: 'guest' };
+
     const userMsg = {
       id: Date.now(),
       type: 'user',
       content: inputValue.trim(),
       timestamp: new Date().toLocaleString(),
+      userId: userData.username || 'guest',
     };
 
     setMessages(prev => {
