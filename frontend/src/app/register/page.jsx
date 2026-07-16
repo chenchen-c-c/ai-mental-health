@@ -5,12 +5,13 @@ import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, MailOutlined, PhoneOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { post } from '../utils/request';
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     if (values.password !== values.confirmPassword) {
       message.error('两次输入的密码不一致');
       return;
@@ -18,19 +19,31 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    setTimeout(() => {
-      const userData = {
+    try {
+      const res = await post('/auth/register', {
         username: values.username,
         email: values.email,
-        nickname: values.nickname || values.username,
-        phone: values.phone || '',
-        role: 'user',
-      };
-      localStorage.setItem('user', JSON.stringify(userData));
-      document.cookie = `user=${encodeURIComponent(JSON.stringify(userData))}; path=/; max-age=${30 * 24 * 60 * 60}`;
-      message.success('注册成功');
-      router.push('/');
-    }, 500);
+        password: values.password,
+        confirm_password: values.confirmPassword,
+        nickname: values.nickname,
+        phone: values.phone,
+      });
+
+      if (res.code === 200) {
+        const { token, user } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${30 * 24 * 60 * 60}`;
+        message.success('注册成功');
+        router.push('/');
+      } else {
+        message.error(res.msg || '注册失败');
+        setLoading(false);
+      }
+    } catch (err) {
+      message.error(err.msg || '网络错误');
+      setLoading(false);
+    }
   };
 
   return (

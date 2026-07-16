@@ -4,28 +4,45 @@ import { useState } from 'react';
 import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { post } from '../utils/request';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     setLoading(true);
 
-    if (values.username === 'user' && values.password === '123456') {
-      localStorage.setItem('user', JSON.stringify({ username: 'user', role: 'user' }));
-      localStorage.removeItem('admin');
-      message.success('登录成功');
-      document.location.href = '/';
-    } else if (values.username === 'admin' && values.password === '123456') {
-      const adminData = JSON.stringify({ username: 'admin', role: 'admin' });
-      localStorage.setItem('admin', adminData);
-      localStorage.removeItem('user');
-      document.cookie = `admin=${encodeURIComponent(adminData)}; path=/; max-age=${30 * 24 * 60 * 60}`;
-      document.cookie = 'user=; path=/; max-age=0';
-      message.success('管理员登录成功');
-      document.location.href = '/back/dashboard';
-    } else {
-      message.error('账号或密码错误');
+    try {
+      const res = await post('/auth/login', {
+        username: values.username,
+        password: values.password,
+      });
+
+      if (res.code === 200) {
+        const { token, user } = res.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        if (user.role === 'admin') {
+          localStorage.setItem('admin', JSON.stringify(user));
+          localStorage.removeItem('user');
+          document.cookie = `admin=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${30 * 24 * 60 * 60}`;
+          document.cookie = 'user=; path=/; max-age=0';
+          message.success('管理员登录成功');
+          document.location.href = '/back/dashboard';
+        } else {
+          localStorage.removeItem('admin');
+          document.cookie = 'admin=; path=/; max-age=0';
+          document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${30 * 24 * 60 * 60}`;
+          message.success('登录成功');
+          document.location.href = '/';
+        }
+      } else {
+        message.error(res.msg || '登录失败');
+        setLoading(false);
+      }
+    } catch (err) {
+      message.error(err.msg || '网络错误');
       setLoading(false);
     }
   };
