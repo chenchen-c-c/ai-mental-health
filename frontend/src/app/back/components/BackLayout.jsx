@@ -36,10 +36,10 @@ export default function BackLayout({ children }) {
           setAdmin(JSON.parse(storedAdmin));
         } catch (e) {
           localStorage.removeItem('admin');
-          router.push('/back/login');
+          router.push('/login');
         }
       } else {
-        router.push('/back/login');
+        router.push('/login');
       }
     }
   }, [router]);
@@ -48,7 +48,7 @@ export default function BackLayout({ children }) {
     localStorage.removeItem('admin');
     document.cookie = 'admin=; path=/; max-age=0';
     setAdmin(null);
-    router.push('/back/login');
+    router.push('/login');
   };
 
   const adminMenu = (

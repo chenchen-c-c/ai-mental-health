@@ -36,7 +36,7 @@ export default function BackLayout({ children }) {
         if (storedAdmin) {
           try {
             const adminData = JSON.parse(storedAdmin);
-            if (adminData && adminData.role === 'admin') {
+            if (adminData && adminData.role === 1) {
               setAdmin(adminData);
               setIsLoading(false);
               return;

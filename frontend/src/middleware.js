@@ -12,8 +12,8 @@ export function middleware(request) {
     }
 
     try {
-      const admin = JSON.parse(adminCookie.value);
-      if (!admin || admin.role !== 'admin') {
+      const admin = JSON.parse(decodeURIComponent(adminCookie.value));
+      if (!admin || admin.role !== 1) {
         const loginUrl = new URL('/login', request.nextUrl.origin);
         return NextResponse.redirect(loginUrl);
       }
