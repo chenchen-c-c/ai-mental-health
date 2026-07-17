@@ -37,7 +37,7 @@ def get_journal(id):
     if not journal:
         return not_found('日记不存在')
     
-    if user.role != 'admin' and journal.user_id != user.id:
+    if user.role != 1 and journal.user_id != user.id:
         return error('无权查看该日记', 403)
     
     return success(journal.to_dict())
@@ -76,7 +76,7 @@ def update_journal(id):
     if not journal:
         return not_found('日记不存在')
     
-    if user.role != 'admin' and journal.user_id != user.id:
+    if user.role != 1 and journal.user_id != user.id:
         return error('无权修改该日记', 403)
     
     data = request.get_json()
@@ -101,7 +101,7 @@ def delete_journal(id):
     if not journal:
         return not_found('日记不存在')
     
-    if user.role != 'admin' and journal.user_id != user.id:
+    if user.role != 1 and journal.user_id != user.id:
         return error('无权删除该日记', 403)
     
     db.session.delete(journal)
