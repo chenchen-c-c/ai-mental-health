@@ -10,7 +10,7 @@ export default function ClientOnly({ children, fallback }) {
   }, []);
 
   if (!mounted) {
-    return fallback || null;
+    return <div>{fallback || null}</div>;
   }
 
   return <>{children}</>;

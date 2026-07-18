@@ -76,7 +76,14 @@ export default function ChatPage() {
 
     if (savedHistory) {
       try {
-        setSessionHistory(JSON.parse(savedHistory));
+        const parsed = JSON.parse(savedHistory);
+        // 为旧数据补上唯一 _key
+        const migrated = parsed.map((s, i) => ({
+          ...s,
+          _key: s._key || `migrated-${s.id}-${i}-${Date.now()}`,
+        }));
+        setSessionHistory(migrated);
+        localStorage.setItem('chatSessionHistory', JSON.stringify(migrated));
       } catch (e) {
         localStorage.removeItem('chatSessionHistory');
       }
@@ -84,6 +91,7 @@ export default function ChatPage() {
       const lastAiMsg = [...currentMessages].reverse().find(msg => msg.type === 'ai');
       if (lastAiMsg) {
         const initialHistory = [{
+          _key: `init-${Date.now()}`,
           id: Date.now(),
           name: 'AI情绪助手',
           time: lastAiMsg.timestamp,
@@ -145,6 +153,7 @@ export default function ChatPage() {
 
       setSessionHistory(prev => {
         const newSession = {
+          _key: `session-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           id: result.sessionId,
           name: 'AI情绪助手',
           time: new Date().toLocaleString(),
@@ -220,7 +229,7 @@ export default function ChatPage() {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {sessionHistory.map(session => (
                       <div
-                        key={session.id}
+                        key={session._key || session.id}
                         style={{
                           padding: '16px',
                           borderRadius: '16px',
