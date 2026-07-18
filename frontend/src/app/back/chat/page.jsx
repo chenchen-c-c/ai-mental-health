@@ -3,75 +3,20 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Input, Select, Tag, message } from 'antd';
 import { EyeOutlined, UserOutlined, ClockCircleOutlined, MessageOutlined } from '@ant-design/icons';
+import { get } from '../../utils/request';
 
 const emotionTags = [
   { id: 'happy', name: '开心', emoji: '😊', color: '#fbbf24' },
-  { id: 'calm', name: '平静', emoji: '😌', color: '#60a5fa' },
+  { id: 'calm', name: '平静', emoji: '', color: '#60a5fa' },
   { id: 'anxious', name: '焦虑', emoji: '😰', color: '#ef4444' },
   { id: 'sad', name: '悲伤', emoji: '😢', color: '#9ca3af' },
   { id: 'excited', name: '兴奋', emoji: '🤩', color: '#22c55e' },
-  { id: 'angry', name: '生气', emoji: '😠', color: '#dc2626' },
+  { id: 'angry', name: '生气', emoji: '', color: '#dc2626' },
   { id: 'neutral', name: '中性', emoji: '😐', color: '#94a3b8' },
 ];
 
 const getEmotionInfo = (emotionId) => {
-  return emotionTags.find(e => e.id === emotionId) || { name: emotionId, emoji: '📝', color: '#94a3b8' };
-};
-
-const getEmotionFromMessage = (content) => {
-  const lowerMsg = content.toLowerCase();
-  if (lowerMsg.includes('难过') || lowerMsg.includes('伤心') || lowerMsg.includes('悲伤') || lowerMsg.includes('想哭') || lowerMsg.includes('不开心')) {
-    return 'sad';
-  }
-  if (lowerMsg.includes('焦虑') || lowerMsg.includes('担心') || lowerMsg.includes('害怕') || lowerMsg.includes('不安') || lowerMsg.includes('紧张')) {
-    return 'anxious';
-  }
-  if (lowerMsg.includes('生气') || lowerMsg.includes('愤怒') || lowerMsg.includes('烦') || lowerMsg.includes('讨厌') || lowerMsg.includes('恨')) {
-    return 'angry';
-  }
-  if (lowerMsg.includes('开心') || lowerMsg.includes('高兴') || lowerMsg.includes('快乐') || lowerMsg.includes('幸福') || lowerMsg.includes('好') && !lowerMsg.includes('不好')) {
-    return 'happy';
-  }
-  return 'neutral';
-};
-
-const getSessionsFromStorage = () => {
-  const storedMessages = localStorage.getItem('chatMessages');
-  
-  if (!storedMessages) {
-    return [];
-  }
-  
-  try {
-    const messages = JSON.parse(storedMessages);
-    
-    const userMessages = messages.filter(msg => msg.type === 'user');
-    if (userMessages.length === 0) {
-      return [];
-    }
-    
-    const sessions = [];
-    userMessages.forEach((userMsg, index) => {
-      const nextAiMsg = messages.find(m => m.id > userMsg.id && m.type === 'ai');
-      const emotion = getEmotionFromMessage(userMsg.content);
-      const userName = userMsg.userId || '匿名用户';
-      
-      sessions.push({
-        id: index + 1,
-        userId: userName,
-        userName: userName,
-        emotion: emotion,
-        startTime: userMsg.timestamp,
-        messageCount: nextAiMsg ? 2 : 1,
-        preview: userMsg.content.length > 50 ? userMsg.content.substring(0, 50) + '...' : userMsg.content,
-        messages: nextAiMsg ? [userMsg, nextAiMsg] : [userMsg],
-      });
-    });
-    
-    return sessions.reverse();
-  } catch (e) {
-    return [];
-  }
+  return emotionTags.find(e => e.id === emotionId) || { name: emotionId || 'neutral', emoji: '📝', color: '#94a3b8' };
 };
 
 export default function ChatMonitorPage() {
@@ -82,43 +27,63 @@ export default function ChatMonitorPage() {
   const [activeFilters, setActiveFilters] = useState({ userId: '', emotion: '' });
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     fetchSessions();
   }, []);
 
   useEffect(() => {
-    filterSessions();
+    fetchSessions();
   }, [pagination.current, pagination.pageSize, activeFilters]);
 
-  const fetchSessions = () => {
+  const fetchSessions = async () => {
     setLoading(true);
-    const allSessions = getSessionsFromStorage();
-    setSessions(allSessions);
-    setPagination(prev => ({ ...prev, total: allSessions.length }));
-    setLoading(false);
+    try {
+      const params = {
+        page: pagination.current,
+        per_page: pagination.pageSize,
+      };
+      const res = await get('/chat/sessions', params);
+      let list = res.data.list || [];
+
+      // 前端过滤
+      if (activeFilters.userId) {
+        list = list.filter(s => (s.user_name || '').toLowerCase().includes(activeFilters.userId.toLowerCase()));
+      }
+      if (activeFilters.emotion) {
+        list = list.filter(s => s.emotion === activeFilters.emotion);
+      }
+
+      setSessions(list);
+      setPagination(prev => ({ ...prev, total: res.data.total || 0 }));
+    } catch (err) {
+      message.error('获取咨询记录失败');
+      setSessions([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const filterSessions = () => {
-    let result = getSessionsFromStorage();
-    
-    if (activeFilters.userId) {
-      result = result.filter(s => s.userName.toLowerCase().includes(activeFilters.userId.toLowerCase()));
-    }
-    if (activeFilters.emotion) {
-      result = result.filter(s => s.emotion === activeFilters.emotion);
-    }
-
-    setPagination(prev => ({ ...prev, total: result.length }));
-    
-    const start = (pagination.current - 1) * pagination.pageSize;
-    const end = start + pagination.pageSize;
-    setSessions(result.slice(start, end));
-  };
-
-  const handleViewDetail = (session) => {
-    setSelectedSession(session);
+  const handleViewDetail = async (session) => {
+    setDetailLoading(true);
+    setSelectedSession({ ...session, messages: [] });
     setDetailVisible(true);
+    try {
+      const res = await get(`/chat/sessions/${session.id}`);
+      setSelectedSession({
+        ...session,
+        messages: res.data.messages || [],
+        userName: res.data.session?.user_name || session.user_name,
+        emotion: res.data.session?.emotion || session.emotion,
+        messageCount: res.data.session?.message_count || session.message_count,
+        startTime: res.data.session?.created_at || session.startTime,
+      });
+    } catch (err) {
+      message.error('获取会话详情失败');
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const handleFilterChange = (key, value) => {
@@ -149,8 +114,8 @@ export default function ChatMonitorPage() {
     },
     {
       title: '用户',
-      dataIndex: 'userName',
-      key: 'userName',
+      dataIndex: 'user_name',
+      key: 'user_name',
       width: 100,
       align: 'center',
       render: (userName) => (
@@ -166,7 +131,7 @@ export default function ChatMonitorPage() {
           }}>
             <UserOutlined style={{ fontSize: '12px', color: '#64748b' }} />
           </div>
-          <span style={{ fontSize: '14px', color: '#263238' }}>{userName}</span>
+          <span style={{ fontSize: '14px', color: '#263238' }}>{userName || '未知用户'}</span>
         </div>
       ),
     },
@@ -199,8 +164,8 @@ export default function ChatMonitorPage() {
     },
     {
       title: '消息数',
-      dataIndex: 'messageCount',
-      key: 'messageCount',
+      dataIndex: 'message_count',
+      key: 'message_count',
       width: 100,
       align: 'center',
       render: (count) => (
@@ -213,14 +178,14 @@ export default function ChatMonitorPage() {
           fontSize: '14px',
         }}>
           <MessageOutlined style={{ fontSize: '12px' }} />
-          {count}
+          {count || 0}
         </div>
       ),
     },
     {
       title: '时间',
-      dataIndex: 'startTime',
-      key: 'startTime',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 180,
       render: (time) => (
         <div style={{ 
@@ -369,7 +334,7 @@ export default function ChatMonitorPage() {
                   }}>
                     <UserOutlined style={{ fontSize: '14px', color: '#64748b' }} />
                   </div>
-                  <span style={{ fontSize: '14px', fontWeight: '500', color: '#263238' }}>{selectedSession.userName}</span>
+                  <span style={{ fontSize: '14px', fontWeight: '500', color: '#263238' }}>{selectedSession.userName || '未知用户'}</span>
                 </div>
                 {(() => {
                   const info = getEmotionInfo(selectedSession.emotion);
@@ -380,48 +345,54 @@ export default function ChatMonitorPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: '#64748b' }}>
                 <span>开始时间：{selectedSession.startTime}</span>
-                <span>消息数：{selectedSession.messageCount}</span>
+                <span>消息数：{selectedSession.messageCount || 0}</span>
               </div>
               <div style={{ paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ fontSize: '14px', color: '#64748b', fontWeight: '500' }}>对话记录</div>
-                {selectedSession.messages?.map((msg) => (
-                  <div key={msg.id} style={{ display: 'flex', gap: '12px' }}>
-                    <div style={{
-                      width: '36px',
-                      height: '36px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                      background: msg.type === 'user' ? '#1890ff' : '#fbbf24',
-                    }}>
-                      {msg.type === 'user' ? (
-                        <UserOutlined style={{ color: '#ffffff', fontSize: '16px' }} />
-                      ) : (
-                        <span style={{ color: '#ffffff', fontSize: '16px' }}>🤖</span>
-                      )}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '500', color: msg.type === 'user' ? '#1890ff' : '#d97706' }}>
-                          {msg.type === 'user' ? '用户' : 'AI助手'}
-                        </span>
-                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>{msg.timestamp}</span>
-                      </div>
+                {detailLoading ? (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>加载中...</div>
+                ) : selectedSession.messages?.length > 0 ? (
+                  selectedSession.messages.map((msg) => (
+                    <div key={msg.id} style={{ display: 'flex', gap: '12px' }}>
                       <div style={{
-                        padding: '12px 16px',
-                        borderRadius: msg.type === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        background: msg.type === 'user' ? '#e6f7ff' : '#fffbe6',
-                        fontSize: '14px',
-                        color: '#475569',
-                        lineHeight: '1.6',
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        background: msg.type === 'user' ? '#1890ff' : '#fbbf24',
                       }}>
-                        {msg.content}
+                        {msg.type === 'user' ? (
+                          <UserOutlined style={{ color: '#ffffff', fontSize: '16px' }} />
+                        ) : (
+                          <span style={{ color: '#ffffff', fontSize: '16px' }}>🤖</span>
+                        )}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                          <span style={{ fontSize: '13px', fontWeight: '500', color: msg.type === 'user' ? '#1890ff' : '#d97706' }}>
+                            {msg.type === 'user' ? '用户' : 'AI助手'}
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#94a3b8' }}>{msg.timestamp}</span>
+                        </div>
+                        <div style={{
+                          padding: '12px 16px',
+                          borderRadius: msg.type === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                          background: msg.type === 'user' ? '#e6f7ff' : '#fffbe6',
+                          fontSize: '14px',
+                          color: '#475569',
+                          lineHeight: '1.6',
+                        }}>
+                          {msg.content}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '20px', color: '#94a3b8' }}>暂无对话记录</div>
+                )}
               </div>
             </div>
             <div style={{
