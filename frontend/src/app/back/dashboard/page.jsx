@@ -221,7 +221,7 @@ export default function DashboardPage() {
     const fetchDashboardData = async () => {
       try {
         const response = await request({
-          url: '/api/dashboard/stats',
+          url: '/dashboard/stats',
           method: 'get',
         });
         
