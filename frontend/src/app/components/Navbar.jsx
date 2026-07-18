@@ -40,6 +40,11 @@ export default function Navbar() {
   };
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
@@ -118,6 +123,7 @@ export default function Navbar() {
         </div>
       </div>
 
+      {mounted && (
       <Drawer
         title="心理健康AI助手"
         placement="right"
@@ -164,6 +170,7 @@ export default function Navbar() {
           )}
         </div>
       </Drawer>
+      )}
     </nav>
   );
 }

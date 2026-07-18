@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 print(f"=== AI Configuration ===")
-print(f"AI_API_KEY: {Config.AI_API_KEY[:5]}... (exists: {bool(Config.AI_API_KEY)})")
+print(f"AI_API_KEY: {'已配置' if Config.AI_API_KEY else '未配置'}")
 print(f"AI_BASE_URL: {Config.AI_BASE_URL}")
 print(f"AI_MODEL: {Config.AI_MODEL}")
 print(f"AI_MAX_HISTORY: {Config.AI_MAX_HISTORY}")
@@ -22,7 +22,7 @@ print(f"=======================")
 init_ai_client()
 
 db.init_app(app)
-cors.init_app(app, resources={r'/api/*': {'origins': '*', 'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 'allow_headers': ['Content-Type', 'Authorization']}})
+cors.init_app(app, resources={r'/api/*': {'origins': ['http://localhost:3000'], 'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 'allow_headers': ['Content-Type', 'Authorization']}})
 
 from routes.auth import auth_bp
 from routes.journal import journal_bp

@@ -1,4 +1,5 @@
 from flask import Blueprint
+from extensions import db
 from models import User, Journal, ChatSession, ChatMessage, KnowledgeArticle
 from utils.response import success
 from utils.jwt import admin_required
@@ -68,9 +69,9 @@ def get_total_stats():
     total_consultations = ChatSession.query.count()
     
     avg_mood = 0
-    journals = Journal.query.all()
-    if journals:
-        avg_mood = round(sum(j.score for j in journals) / len(journals), 1)
+    avg_result = db.session.query(db.func.avg(Journal.score)).scalar()
+    if avg_result is not None:
+        avg_mood = round(avg_result, 1)
     
     return success({
         'total_users': total_users,
@@ -115,9 +116,9 @@ def get_stats():
     ).count()
     
     avg_mood = 0
-    journals = Journal.query.all()
-    if journals:
-        avg_mood = round(sum(j.score for j in journals) / len(journals), 1)
+    avg_result = db.session.query(db.func.avg(Journal.score)).scalar()
+    if avg_result is not None:
+        avg_mood = round(avg_result, 1)
     
     chat_stat_data = get_chat_stat_data()
     total_chats = sum(item['count'] for item in chat_stat_data)
