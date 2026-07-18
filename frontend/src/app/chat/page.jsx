@@ -5,57 +5,41 @@ import { Button, Input, Tag } from 'antd';
 import { SendOutlined, MessageOutlined, RobotOutlined, LoadingOutlined, UserOutlined, ClockCircleOutlined, BulbOutlined } from '@ant-design/icons';
 import FrontendLayout from '../components/FrontendLayout';
 
-const aiReplies = {
-  default: [
-    '谢谢你愿意和我分享这些，我在这里认真倾听。你的感受很重要，每一种情绪都值得被看见和理解。',
-    '我能感受到你现在的情绪，这是很正常的反应。让我们一起慢慢梳理，找到让你感到舒服的方式。',
-    '你不是一个人在面对这些，我会一直陪伴着你。无论什么时候，你都可以来找我倾诉。',
-    '我理解你的感受，有时候生活确实会让人感到疲惫和迷茫。但请记住，你已经做得很棒了。',
-    '谢谢你的信任，愿意把这些告诉我。你的勇气和坦诚让我很感动，这本身就是一种成长。',
-  ],
-  sad: [
-    '我很抱歉听到你现在感到难过。悲伤是一种正常的情绪，就像下雨一样，总会停的。给自己一些时间和空间去感受它。',
-    '难过的时候，不要强迫自己马上好起来。哭泣、倾诉、或者只是静静地待一会儿，都是可以的。我在这里陪着你。',
-    '悲伤的背后往往是深深的在意和爱。允许自己感受悲伤，也是一种温柔的自我关怀。',
-    '我知道现在很难，但请相信，黑暗总会过去，黎明终会到来。你不是一个人，我在这里。',
-  ],
-  anxious: [
-    '焦虑就像一个警报器，提醒我们有些事情需要关注。让我们一起深呼吸，慢慢放松下来。',
-    '我理解你现在感到不安和担忧。试着把注意力集中在当下，感受自己的呼吸，一步一步来。',
-    '焦虑的时候，思绪会像脱缰的野马。试着写下那些担心的事情，然后告诉自己："这只是想法，不是事实。"',
-    '深呼吸，吸气4秒，屏息2秒，呼气6秒。重复几次，让身体和情绪都慢慢平静下来。',
-  ],
-  angry: [
-    '生气是一种很有力量的情绪，它在告诉我们有些东西需要改变。允许自己感受愤怒，但不要被它控制。',
-    '我理解你现在很生气，这种感觉一定很不好受。试着找一个安全的方式释放出来，比如运动、呐喊或者写下来。',
-    '愤怒的背后往往是受伤和失望。当你准备好的时候，我们可以一起看看是什么让你感到受伤。',
-    '生气的时候，先停下来，做几个深呼吸。告诉自己："我可以选择如何回应。"',
-  ],
-  happy: [
-    '听到你感到开心，我也很为你高兴！快乐是很珍贵的礼物，好好享受当下的美好时刻。',
-    '你的快乐感染了我！分享快乐会让快乐加倍，谢谢你让我也感受到这份喜悦。',
-    '看到你开心，我真的很欣慰。记住这种感觉，当遇到困难时，它会成为你前行的力量。',
-    '快乐是生活给我们的奖励，好好珍惜每一个让你微笑的瞬间。继续保持这份好心情！',
-  ],
-};
-
-function getReply(userMessage) {
-  const lowerMsg = userMessage.toLowerCase();
-  
-  if (lowerMsg.includes('难过') || lowerMsg.includes('伤心') || lowerMsg.includes('悲伤') || lowerMsg.includes('想哭') || lowerMsg.includes('不开心')) {
-    return aiReplies.sad[Math.floor(Math.random() * aiReplies.sad.length)];
+async function sendMessageToAI(content, sessionId = null) {
+  try {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+      return { success: false, message: '请先登录' };
+    }
+    
+    const response = await fetch('/api/chat/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        content,
+        session_id: sessionId,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (data.code === 200) {
+      return {
+        success: true,
+        content: data.data.ai_message.content,
+        sessionId: data.data.session.id,
+      };
+    } else {
+      return { success: false, message: data.msg || '发送失败' };
+    }
+  } catch (error) {
+    console.error('AI API error:', error);
+    return { success: false, message: '网络错误' };
   }
-  if (lowerMsg.includes('焦虑') || lowerMsg.includes('担心') || lowerMsg.includes('害怕') || lowerMsg.includes('不安') || lowerMsg.includes('紧张')) {
-    return aiReplies.anxious[Math.floor(Math.random() * aiReplies.anxious.length)];
-  }
-  if (lowerMsg.includes('生气') || lowerMsg.includes('愤怒') || lowerMsg.includes('烦') || lowerMsg.includes('讨厌') || lowerMsg.includes('恨')) {
-    return aiReplies.angry[Math.floor(Math.random() * aiReplies.angry.length)];
-  }
-  if (lowerMsg.includes('开心') || lowerMsg.includes('高兴') || lowerMsg.includes('快乐') || lowerMsg.includes('幸福') || lowerMsg.includes('好') && !lowerMsg.includes('不好')) {
-    return aiReplies.happy[Math.floor(Math.random() * aiReplies.happy.length)];
-  }
-  
-  return aiReplies.default[Math.floor(Math.random() * aiReplies.default.length)];
 }
 
 export default function ChatPage() {
@@ -116,7 +100,9 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  const handleSend = () => {
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
+  const handleSend = async () => {
     if (!inputValue.trim() || loading) return;
 
     const user = localStorage.getItem('user');
@@ -139,11 +125,15 @@ export default function ChatPage() {
     setInputValue('');
     setLoading(true);
 
-    setTimeout(() => {
+    const result = await sendMessageToAI(inputValue.trim(), currentSessionId);
+    
+    if (result.success) {
+      setCurrentSessionId(result.sessionId);
+      
       const aiMsg = {
         id: Date.now() + 1,
         type: 'ai',
-        content: getReply(inputValue),
+        content: result.content,
         timestamp: new Date().toLocaleString(),
       };
 
@@ -155,19 +145,30 @@ export default function ChatPage() {
 
       setSessionHistory(prev => {
         const newSession = {
-          id: Date.now(),
+          id: result.sessionId,
           name: 'AI情绪助手',
           time: new Date().toLocaleString(),
-          preview: aiMsg.content.length > 30 ? aiMsg.content.substring(0, 30) + '...' : aiMsg.content,
+          preview: result.content.length > 30 ? result.content.substring(0, 30) + '...' : result.content,
           unread: 0,
         };
         const newHistory = [newSession, ...prev].slice(0, 10);
         localStorage.setItem('chatSessionHistory', JSON.stringify(newHistory));
         return newHistory;
       });
+    } else {
+      console.error('Send message failed:', result.message);
+      
+      const errorMsg = {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: '抱歉，我现在无法回应，请稍后再试。',
+        timestamp: new Date().toLocaleString(),
+      };
+      
+      setMessages(prev => [...prev, errorMsg]);
+    }
 
-      setLoading(false);
-    }, 2000);
+    setLoading(false);
   };
 
   const handleKeyDown = (e) => {

@@ -17,3 +17,10 @@ class Config:
     
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secret-key')
     JWT_EXPIRE_HOURS = int(os.getenv('JWT_EXPIRE_HOURS', '24'))
+    
+    AI_API_KEY = os.getenv('AI_API_KEY', '')
+    AI_API_SECRET = os.getenv('AI_API_SECRET', '')
+    AI_APPID = os.getenv('AI_APPID', '')
+    AI_BASE_URL = os.getenv('AI_BASE_URL', 'https://api.deepseek.com/v1')
+    AI_MODEL = os.getenv('AI_MODEL', 'deepseek-chat')
+    AI_MAX_HISTORY = int(os.getenv('AI_MAX_HISTORY', '10'))

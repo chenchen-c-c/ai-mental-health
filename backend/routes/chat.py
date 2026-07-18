@@ -3,6 +3,8 @@ from models import ChatSession, ChatMessage
 from extensions import db
 from utils.response import success, error, not_found
 from utils.jwt import auth_required, admin_required
+from utils.ai import get_ai_response, init_ai_client
+from config import Config
 from datetime import datetime
 
 chat_bp = Blueprint('chat', __name__)
@@ -52,7 +54,7 @@ def get_session(id):
     if not session:
         return not_found('会话不存在')
     
-    if user.role != 'admin' and session.user_id != user.id:
+    if user.role != 1 and session.user_id != user.id:
         return error('无权查看该会话', 403)
     
     messages = ChatMessage.query.filter_by(session_id=id).order_by(ChatMessage.timestamp).all()
@@ -102,17 +104,17 @@ def send_message():
         timestamp=datetime.now(),
     )
     db.session.add(user_message)
+    db.session.flush()
     
-    ai_replies = {
-        'sad': ['我很抱歉听到你现在感到难过。悲伤是一种正常的情绪，给自己一些时间和空间去感受它。', '难过的时候，不要强迫自己马上好起来。我在这里陪着你。'],
-        'anxious': ['焦虑就像一个警报器，提醒我们有些事情需要关注。让我们一起深呼吸，慢慢放松下来。', '我理解你现在感到不安和担忧。试着把注意力集中在当下。'],
-        'angry': ['生气是一种很有力量的情绪，它在告诉我们有些东西需要改变。允许自己感受愤怒，但不要被它控制。', '我理解你现在很生气，这种感觉一定很不好受。'],
-        'happy': ['听到你感到开心，我也很为你高兴！快乐是很珍贵的礼物，好好享受当下的美好时刻。', '你的快乐感染了我！分享快乐会让快乐加倍。'],
-        'neutral': ['谢谢你愿意和我分享这些，我在这里认真倾听。你的感受很重要，每一种情绪都值得被看见和理解。', '我能感受到你现在的情绪，这是很正常的反应。'],
-    }
+    history_messages = ChatMessage.query.filter_by(session_id=session.id).order_by(ChatMessage.timestamp).all()
+    history_messages = history_messages[-Config.AI_MAX_HISTORY:]
     
-    emotion = session.emotion
-    ai_content = ai_replies.get(emotion, ai_replies['neutral'])[0]
+    messages_for_ai = [
+        {'type': m.type, 'content': m.content}
+        for m in history_messages
+    ]
+    
+    ai_content = get_ai_response(messages_for_ai)
     
     ai_message = ChatMessage(
         session_id=session.id,
@@ -143,7 +145,7 @@ def delete_session(id):
     if not session:
         return not_found('会话不存在')
     
-    if user.role != 'admin' and session.user_id != user.id:
+    if user.role != 1 and session.user_id != user.id:
         return error('无权删除该会话', 403)
     
     ChatMessage.query.filter_by(session_id=id).delete()

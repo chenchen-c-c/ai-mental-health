@@ -2,10 +2,24 @@ from flask import Flask
 from config import Config
 from extensions import db, cors
 from utils.response import error
+from utils.ai import init_ai_client, get_ai_response
 import os
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+print(f"=== AI Configuration ===")
+print(f"AI_API_KEY: {Config.AI_API_KEY[:5]}... (exists: {bool(Config.AI_API_KEY)})")
+print(f"AI_BASE_URL: {Config.AI_BASE_URL}")
+print(f"AI_MODEL: {Config.AI_MODEL}")
+print(f"AI_MAX_HISTORY: {Config.AI_MAX_HISTORY}")
+print(f"=======================")
+
+init_ai_client()
 
 db.init_app(app)
 cors.init_app(app, resources={r'/api/*': {'origins': '*', 'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 'allow_headers': ['Content-Type', 'Authorization']}})
