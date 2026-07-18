@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UserOutlined, HeartOutlined, MessageOutlined, SmileOutlined } from '@ant-design/icons';
 import { request } from '../../utils/request';
 
@@ -67,56 +67,87 @@ function StatCard({ icon: Icon, title, value, subValue, color }) {
 }
 
 function LineChart({ data }) {
+  const containerRef = useRef(null);
+  const [chartWidth, setChartWidth] = useState(600);
   const maxScore = 10;
   const minScore = 0;
   const chartHeight = 180;
   const padding = { top: 20, right: 20, bottom: 30, left: 50 };
-  const chartWidth = '100%';
+  const plotWidth = chartWidth - padding.left - padding.right;
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setChartWidth(containerRef.current.offsetWidth || 600);
+      }
+    };
+
+    updateWidth();
+
+    const observer = new ResizeObserver(updateWidth);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   const getX = (index, total) => {
-    const width = parseInt(chartWidth) || 600;
-    return padding.left + (index / (total - 1)) * (width - padding.left - padding.right);
+    if (total <= 1) {
+      return padding.left + plotWidth / 2;
+    }
+    return padding.left + (index / (total - 1)) * plotWidth;
   };
 
   const getY = (score) => {
     return padding.top + ((maxScore - score) / (maxScore - minScore)) * (chartHeight - padding.top - padding.bottom);
   };
 
-  const points = data.map((item, index) => ({
+  const points = (data || []).map((item, index) => ({
     x: getX(index, data.length),
     y: getY(item.score),
     date: item.date,
     score: item.score,
   }));
 
-  const linePath = points.map((p, i) => 
+  const linePath = points.map((p, i) =>
     `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
   ).join(' ');
 
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding.bottom} L ${padding.left} ${chartHeight - padding.bottom} Z`;
+  const areaPath = points.length
+    ? `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding.bottom} L ${padding.left} ${chartHeight - padding.bottom} Z`
+    : '';
 
   const yAxis = [0, 2, 4, 6, 8, 10];
 
+  if (!points.length) {
+    return (
+      <div style={{ height: chartHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9e9e9e', fontSize: '13px' }}>
+        暂无情绪数据
+      </div>
+    );
+  }
+
   return (
-    <div style={{ position: 'relative', height: chartHeight }}>
+    <div ref={containerRef} style={{ position: 'relative', height: chartHeight, width: '100%' }}>
       <svg width={chartWidth} height={chartHeight}>
         {yAxis.map((val, i) => {
           const y = getY(val);
           return (
             <g key={i}>
-              <line 
-                x1={padding.left} 
-                y1={y} 
-                x2="100%" 
-                y2={y} 
-                stroke="#e0e0e0" 
-                strokeWidth="1" 
-                strokeDasharray="4,4" 
+              <line
+                x1={padding.left}
+                y1={y}
+                x2={chartWidth - padding.right}
+                y2={y}
+                stroke="#e0e0e0"
+                strokeWidth="1"
+                strokeDasharray="4,4"
               />
-              <text 
-                x={padding.left - 10} 
-                y={y + 4} 
-                textAnchor="end" 
+              <text
+                x={padding.left - 10}
+                y={y + 4}
+                textAnchor="end"
                 style={{ fontSize: '11px', fill: '#9e9e9e' }}
               >
                 {val}
@@ -124,32 +155,34 @@ function LineChart({ data }) {
             </g>
           );
         })}
-        
+
         <defs>
           <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
             <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
           </linearGradient>
         </defs>
-        
-        <path d={areaPath} fill="url(#areaGradient)" />
-        
-        <path 
-          d={linePath} 
-          fill="none" 
-          stroke="#fbbf24" 
-          strokeWidth="3" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-        />
-        
+
+        {areaPath && <path d={areaPath} fill="url(#areaGradient)" />}
+
+        {linePath && (
+          <path
+            d={linePath}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        )}
+
         {points.map((p, i) => (
           <g key={i}>
             <circle cx={p.x} cy={p.y} r="5" fill="#fbbf24" stroke="#ffffff" strokeWidth="2" />
-            <text 
-              x={p.x} 
-              y={chartHeight - 10} 
-              textAnchor="middle" 
+            <text
+              x={p.x}
+              y={chartHeight - 10}
+              textAnchor="middle"
               style={{ fontSize: '11px', fill: '#9e9e9e' }}
             >
               {p.date}

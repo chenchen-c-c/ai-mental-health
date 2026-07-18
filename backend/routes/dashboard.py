@@ -6,12 +6,17 @@ from datetime import datetime, timedelta
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
+def get_day_bounds(days_ago=0):
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = today - timedelta(days=days_ago)
+    end_date = start_date + timedelta(days=1)
+    return start_date, end_date
+
 def get_mood_trend_data():
     trend = []
     for i in range(6, -1, -1):
-        date = (datetime.now() - timedelta(days=i)).strftime('%m-%d')
-        start_date = datetime.now() - timedelta(days=i)
-        end_date = datetime.now() - timedelta(days=i-1) if i > 0 else datetime.now()
+        start_date, end_date = get_day_bounds(i)
+        date = start_date.strftime('%m-%d')
         day_journals = Journal.query.filter(
             Journal.created_at >= start_date,
             Journal.created_at < end_date
@@ -26,9 +31,8 @@ def get_mood_trend_data():
 def get_chat_stat_data():
     stat = []
     for i in range(6, -1, -1):
-        date = (datetime.now() - timedelta(days=i)).strftime('%m-%d')
-        start_date = datetime.now() - timedelta(days=i)
-        end_date = datetime.now() - timedelta(days=i-1) if i > 0 else datetime.now()
+        start_date, end_date = get_day_bounds(i)
+        date = start_date.strftime('%m-%d')
         count = ChatSession.query.filter(
             ChatSession.created_at >= start_date,
             ChatSession.created_at < end_date
@@ -39,9 +43,8 @@ def get_chat_stat_data():
 def get_user_activity_data():
     activity = []
     for i in range(6, -1, -1):
-        date = (datetime.now() - timedelta(days=i)).strftime('%m-%d')
-        start_date = datetime.now() - timedelta(days=i)
-        end_date = datetime.now() - timedelta(days=i-1) if i > 0 else datetime.now()
+        start_date, end_date = get_day_bounds(i)
+        date = start_date.strftime('%m-%d')
         new_users = User.query.filter(
             User.created_at >= start_date,
             User.created_at < end_date
@@ -100,9 +103,16 @@ def get_stats():
     total_users = User.query.count()
     active_users = User.query.filter(User.created_at >= datetime.now() - timedelta(days=30)).count()
     total_journals = Journal.query.count()
-    today_journals = Journal.query.filter(Journal.created_at >= datetime.now() - timedelta(days=1)).count()
+    today_start, today_end = get_day_bounds(0)
+    today_journals = Journal.query.filter(
+        Journal.created_at >= today_start,
+        Journal.created_at < today_end
+    ).count()
     total_consultations = ChatSession.query.count()
-    today_consultations = ChatSession.query.filter(ChatSession.created_at >= datetime.now() - timedelta(days=1)).count()
+    today_consultations = ChatSession.query.filter(
+        ChatSession.created_at >= today_start,
+        ChatSession.created_at < today_end
+    ).count()
     
     avg_mood = 0
     journals = Journal.query.all()

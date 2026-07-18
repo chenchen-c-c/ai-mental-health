@@ -3,8 +3,15 @@ from models import Journal
 from extensions import db
 from utils.response import success, error, not_found
 from utils.jwt import auth_required, admin_required
+from datetime import datetime, timedelta
 
 journal_bp = Blueprint('journal', __name__)
+
+def get_day_bounds(days_ago=0):
+    today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_date = today - timedelta(days=days_ago)
+    end_date = start_date + timedelta(days=1)
+    return start_date, end_date
 
 @journal_bp.route('/journal/', methods=['GET'])
 @auth_required
@@ -12,11 +19,24 @@ def get_journals():
     user = request.user
     page = int(request.args.get('page', 1))
     per_page = int(request.args.get('per_page', 10))
+    user_id = request.args.get('user_id')
+    emotion = request.args.get('emotion')
+    score_min = request.args.get('score_min')
+    score_max = request.args.get('score_max')
     
     if user.role == 1:
         query = Journal.query
     else:
         query = Journal.query.filter_by(user_id=user.id)
+
+    if user_id and user.role == 1:
+        query = query.filter(Journal.user_id == int(user_id))
+    if emotion:
+        query = query.filter(Journal.emotion == emotion)
+    if score_min is not None and score_min != '':
+        query = query.filter(Journal.score >= int(score_min))
+    if score_max is not None and score_max != '':
+        query = query.filter(Journal.score <= int(score_max))
     
     journals = query.order_by(Journal.created_at.desc()).paginate(page=page, per_page=per_page)
     

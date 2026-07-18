@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Modal, Empty, Tag } from 'antd';
+import { Button, Modal, Empty, Tag, message } from 'antd';
 import { BookOutlined, EditOutlined, DeleteOutlined, StarOutlined, HeartOutlined } from '@ant-design/icons';
 import FrontendLayout from '../components/FrontendLayout';
+import { request } from '../utils/request';
 
 const emotionTags = [
   { id: 'happy', name: '开心', emoji: '😊', color: '#fbbf24' },
@@ -27,6 +28,16 @@ const getScoreStars = (score) => {
   return Array.from({ length: 10 }, (_, i) => i < score);
 };
 
+const mapJournalFromApi = (item) => ({
+  id: item.id,
+  userId: item.user_id,
+  userName: item.user_name,
+  score: item.score,
+  emotion: item.emotion,
+  content: item.content || '',
+  createdAt: item.created_at,
+});
+
 export default function JournalPage() {
   const [diaries, setDiaries] = useState([]);
   const [score, setScore] = useState(5);
@@ -36,41 +47,82 @@ export default function JournalPage() {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [editingDiary, setEditingDiary] = useState(null);
   const [deletingDiary, setDeletingDiary] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem('journalDiaries');
-    if (saved) {
-      try {
-        setDiaries(JSON.parse(saved));
-      } catch (e) {
-        localStorage.removeItem('journalDiaries');
-      }
+  const fetchDiaries = async () => {
+    try {
+      const response = await request({
+        url: '/journal/',
+        method: 'get',
+        params: { page: 1, per_page: 100 },
+      });
+      setDiaries((response.data.list || []).map(mapJournalFromApi));
+    } catch (error) {
+      message.error('加载日记失败，请稍后重试');
     }
-  }, []);
-
-  const saveDiaries = (newDiaries) => {
-    setDiaries(newDiaries);
-    localStorage.setItem('journalDiaries', JSON.stringify(newDiaries));
   };
 
-  const handleSave = () => {
-    if (!selectedEmotion || !content.trim()) return;
+  const migrateLocalDiaries = async () => {
+    const saved = localStorage.getItem('journalDiaries');
+    if (!saved) return;
 
-    const user = localStorage.getItem('user');
-    const userData = user ? JSON.parse(user) : { id: 1, username: '匿名用户' };
+    try {
+      const localDiaries = JSON.parse(saved);
+      if (!Array.isArray(localDiaries) || localDiaries.length === 0) {
+        localStorage.removeItem('journalDiaries');
+        return;
+      }
 
-    const newDiary = {
-      id: Date.now(),
-      userId: userData.id || 1,
-      userName: userData.username || '匿名用户',
-      score,
-      emotion: selectedEmotion,
-      content: content.trim(),
-      createdAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      for (const diary of localDiaries) {
+        await request({
+          url: '/journal/',
+          method: 'post',
+          data: {
+            score: diary.score,
+            emotion: diary.emotion,
+            content: diary.content,
+          },
+        });
+      }
+
+      localStorage.removeItem('journalDiaries');
+      message.success('已将本地日记同步到服务器');
+    } catch (error) {
+      console.error('Migrate local diaries failed:', error);
+    }
+  };
+
+  useEffect(() => {
+    const init = async () => {
+      await migrateLocalDiaries();
+      await fetchDiaries();
     };
 
-    saveDiaries([newDiary, ...diaries]);
-    resetForm();
+    init();
+  }, []);
+
+  const handleSave = async () => {
+    if (!selectedEmotion || !content.trim() || saving) return;
+
+    setSaving(true);
+    try {
+      await request({
+        url: '/journal/',
+        method: 'post',
+        data: {
+          score,
+          emotion: selectedEmotion,
+          content: content.trim(),
+        },
+      });
+      message.success('日记保存成功');
+      resetForm();
+      await fetchDiaries();
+    } catch (error) {
+      message.error(error.message || error.msg || '保存失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const resetForm = () => {
@@ -87,19 +139,30 @@ export default function JournalPage() {
     setEditModalVisible(true);
   };
 
-  const handleSaveEdit = () => {
-    if (!selectedEmotion || !content.trim() || !editingDiary) return;
+  const handleSaveEdit = async () => {
+    if (!selectedEmotion || !content.trim() || !editingDiary || saving) return;
 
-    const updatedDiaries = diaries.map(d => 
-      d.id === editingDiary.id 
-        ? { ...d, score, emotion: selectedEmotion, content: content.trim() }
-        : d
-    );
-
-    saveDiaries(updatedDiaries);
-    setEditModalVisible(false);
-    setEditingDiary(null);
-    resetForm();
+    setSaving(true);
+    try {
+      await request({
+        url: `/journal/${editingDiary.id}`,
+        method: 'put',
+        data: {
+          score,
+          emotion: selectedEmotion,
+          content: content.trim(),
+        },
+      });
+      message.success('日记更新成功');
+      setEditModalVisible(false);
+      setEditingDiary(null);
+      resetForm();
+      await fetchDiaries();
+    } catch (error) {
+      message.error(error.message || error.msg || '更新失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = (diary) => {
@@ -107,13 +170,24 @@ export default function JournalPage() {
     setDeleteModalVisible(true);
   };
 
-  const confirmDelete = () => {
-    if (!deletingDiary) return;
+  const confirmDelete = async () => {
+    if (!deletingDiary || saving) return;
 
-    const updatedDiaries = diaries.filter(d => d.id !== deletingDiary.id);
-    saveDiaries(updatedDiaries);
-    setDeleteModalVisible(false);
-    setDeletingDiary(null);
+    setSaving(true);
+    try {
+      await request({
+        url: `/journal/${deletingDiary.id}`,
+        method: 'delete',
+      });
+      message.success('日记删除成功');
+      setDeleteModalVisible(false);
+      setDeletingDiary(null);
+      await fetchDiaries();
+    } catch (error) {
+      message.error(error.message || error.msg || '删除失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getEmotionInfo = (emotionId) => {
@@ -259,7 +333,8 @@ export default function JournalPage() {
               <Button
                 type="primary"
                 onClick={handleSave}
-                disabled={!selectedEmotion || !content.trim()}
+                loading={saving}
+                disabled={!selectedEmotion || !content.trim() || saving}
                 style={{
                   flex: 2,
                   padding: '14px',

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Input, Select, Tag, message, Popconfirm } from 'antd';
 import { EyeOutlined, DeleteOutlined, StarOutlined } from '@ant-design/icons';
+import { request } from '../../utils/request';
 
 const emotionTags = [
   { id: 'happy', name: '开心', emoji: '😊', color: '#fbbf24' },
@@ -30,28 +31,15 @@ const getScoreStars = (score) => {
   return Array.from({ length: 10 }, (_, i) => i < score);
 };
 
-const defaultDiaries = [
-  { id: 1, userId: 1, userName: 'user', score: 8, emotion: 'happy', content: '今天心情很好，天气晴朗', createdAt: '2026-07-15 10:30:00' },
-  { id: 2, userId: 1, userName: 'user', score: 5, emotion: 'calm', content: '平平淡淡的一天', createdAt: '2026-07-14 18:20:00' },
-  { id: 3, userId: 2, userName: 'test', score: 3, emotion: 'anxious', content: '最近压力有点大，工作太多了', createdAt: '2026-07-13 22:15:00' },
-];
-
-const getDiariesFromStorage = () => {
-  const stored = localStorage.getItem('journalDiaries');
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch (e) {
-      return defaultDiaries;
-    }
-  }
-  localStorage.setItem('journalDiaries', JSON.stringify(defaultDiaries));
-  return defaultDiaries;
-};
-
-const saveDiariesToStorage = (diaries) => {
-  localStorage.setItem('journalDiaries', JSON.stringify(diaries));
-};
+const mapJournalFromApi = (item) => ({
+  id: item.id,
+  userId: item.user_id,
+  userName: item.user_name,
+  score: item.score,
+  emotion: item.emotion,
+  content: item.content || '',
+  createdAt: item.created_at,
+});
 
 export default function JournalMonitorPage() {
   const [diaries, setDiaries] = useState([]);
@@ -64,39 +52,47 @@ export default function JournalMonitorPage() {
 
   useEffect(() => {
     fetchDiaries();
-  }, []);
-
-  useEffect(() => {
-    filterDiaries();
   }, [pagination.current, pagination.pageSize, activeFilters]);
 
-  const fetchDiaries = () => {
-    setLoading(true);
-    const allDiaries = getDiariesFromStorage();
-    setDiaries(allDiaries);
-    setPagination(prev => ({ ...prev, total: allDiaries.length }));
-    setLoading(false);
-  };
+  const buildQueryParams = () => {
+    const params = {
+      page: pagination.current,
+      per_page: pagination.pageSize,
+    };
 
-  const filterDiaries = () => {
-    let result = getDiariesFromStorage();
-    
     if (activeFilters.userId) {
-      result = result.filter(d => String(d.userId).includes(activeFilters.userId));
+      params.user_id = activeFilters.userId;
     }
     if (activeFilters.emotion) {
-      result = result.filter(d => d.emotion === activeFilters.emotion);
+      params.emotion = activeFilters.emotion;
     }
     if (activeFilters.scoreRange) {
       const [min, max] = activeFilters.scoreRange.split('-').map(Number);
-      result = result.filter(d => d.score >= min && d.score <= max);
+      params.score_min = min;
+      params.score_max = max;
     }
 
-    setPagination(prev => ({ ...prev, total: result.length }));
-    
-    const start = (pagination.current - 1) * pagination.pageSize;
-    const end = start + pagination.pageSize;
-    setDiaries(result.slice(start, end));
+    return params;
+  };
+
+  const fetchDiaries = async () => {
+    setLoading(true);
+    try {
+      const response = await request({
+        url: '/journal/',
+        method: 'get',
+        params: buildQueryParams(),
+      });
+      setDiaries((response.data.list || []).map(mapJournalFromApi));
+      setPagination(prev => ({
+        ...prev,
+        total: response.data.total || 0,
+      }));
+    } catch (error) {
+      message.error('加载情绪日志失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleViewDetail = (diary) => {
@@ -104,13 +100,17 @@ export default function JournalMonitorPage() {
     setDetailVisible(true);
   };
 
-  const handleDelete = (id) => {
-    const allDiaries = getDiariesFromStorage();
-    const updated = allDiaries.filter(d => d.id !== id);
-    saveDiariesToStorage(updated);
-    message.success('删除成功');
-    fetchDiaries();
-    filterDiaries();
+  const handleDelete = async (id) => {
+    try {
+      await request({
+        url: `/journal/${id}`,
+        method: 'delete',
+      });
+      message.success('删除成功');
+      fetchDiaries();
+    } catch (error) {
+      message.error(error.message || error.msg || '删除失败，请稍后重试');
+    }
   };
 
   const handleFilterChange = (key, value) => {
