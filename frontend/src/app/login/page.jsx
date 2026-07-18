@@ -4,10 +4,13 @@ import { useState } from 'react';
 import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { post } from '../utils/request';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const defaultUsername = searchParams.get('username') || '';
 
   const handleSubmit = async (values) => {
     setLoading(true);
@@ -22,7 +25,7 @@ export default function LoginPage() {
         const { token, user } = res.data;
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
-        
+
         if (user.role === 1) {
           localStorage.setItem('admin', JSON.stringify(user));
           localStorage.removeItem('user');
@@ -73,7 +76,7 @@ export default function LoginPage() {
 
           <Form
             name="login"
-            initialValues={{ remember: true }}
+            initialValues={{ username: defaultUsername, remember: true }}
             onFinish={handleSubmit}
             layout="vertical"
             className="space-y-6"
@@ -126,15 +129,6 @@ export default function LoginPage() {
               <Link href="/register" className="text-teal-600 hover:text-teal-700 font-medium">
                 去注册
               </Link>
-            </p>
-          </div>
-
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <p className="text-gray-400 text-sm text-center mb-2">
-              用户账号：<span className="text-teal-600 font-medium">user</span> / <span className="text-teal-600 font-medium">123456</span>
-            </p>
-            <p className="text-gray-400 text-sm text-center">
-              管理员账号：<span className="text-purple-600 font-medium">admin</span> / <span className="text-purple-600 font-medium">123456</span>
             </p>
           </div>
         </div>

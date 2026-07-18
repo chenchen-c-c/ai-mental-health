@@ -28,18 +28,15 @@ export default function RegisterPage() {
       });
 
       if (res.code === 200) {
-        const { token, user } = res.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        document.cookie = `user=${encodeURIComponent(JSON.stringify(user))}; path=/; max-age=${30 * 24 * 60 * 60}`;
-        message.success('注册成功');
-        router.push('/');
+        message.success('注册成功，请登录');
+        router.push(`/login?username=${encodeURIComponent(values.username)}`);
+        return;
       } else {
         message.error(res.msg || '注册失败');
         setLoading(false);
       }
     } catch (err) {
-      message.error(err.msg || '网络错误');
+      message.error(err.message || err.msg || '网络错误');
       setLoading(false);
     }
   };

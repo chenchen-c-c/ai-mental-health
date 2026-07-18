@@ -71,17 +71,8 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     
-    token = generate_token(new_user.id, new_user.username, new_user.role)
-    
     return success({
-        'token': token,
-        'user': {
-            'id': new_user.id,
-            'username': new_user.username,
-            'email': new_user.email,
-            'nickname': new_user.nickname,
-            'role': new_user.role,
-        }
+        'username': new_user.username,
     }, '注册成功')
 
 @auth_bp.route('/auth/info', methods=['GET'])
