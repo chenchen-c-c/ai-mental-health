@@ -50,6 +50,8 @@ export default function Navbar() {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('chatMessages');
+      localStorage.removeItem('chatSessionHistory');
       setUser(null);
       router.push('/');
     }

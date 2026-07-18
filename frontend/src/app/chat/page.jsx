@@ -49,9 +49,21 @@ export default function ChatPage() {
   const [sessionHistory, setSessionHistory] = useState([]);
   const messagesEndRef = useRef(null);
 
+  // 按用户ID区分localStorage key，防止不同用户数据串扰
+  const getUserData = () => {
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const userId = user?.id || 'guest';
+    return {
+      messagesKey: `chatMessages_${userId}`,
+      historyKey: `chatSessionHistory_${userId}`,
+    };
+  };
+
   useEffect(() => {
-    const savedMessages = localStorage.getItem('chatMessages');
-    const savedHistory = localStorage.getItem('chatSessionHistory');
+    const { messagesKey, historyKey } = getUserData();
+    const savedMessages = localStorage.getItem(messagesKey);
+    const savedHistory = localStorage.getItem(historyKey);
     
     let currentMessages = [];
     
@@ -60,7 +72,7 @@ export default function ChatPage() {
         currentMessages = JSON.parse(savedMessages);
         setMessages(currentMessages);
       } catch (e) {
-        localStorage.removeItem('chatMessages');
+        localStorage.removeItem(messagesKey);
       }
     } else {
       const welcomeMsg = {
@@ -71,7 +83,7 @@ export default function ChatPage() {
       };
       currentMessages = [welcomeMsg];
       setMessages(currentMessages);
-      localStorage.setItem('chatMessages', JSON.stringify(currentMessages));
+      localStorage.setItem(messagesKey, JSON.stringify(currentMessages));
     }
 
     if (savedHistory) {
@@ -83,9 +95,9 @@ export default function ChatPage() {
           _key: s._key || `migrated-${s.id}-${i}-${Date.now()}`,
         }));
         setSessionHistory(migrated);
-        localStorage.setItem('chatSessionHistory', JSON.stringify(migrated));
+        localStorage.setItem(historyKey, JSON.stringify(migrated));
       } catch (e) {
-        localStorage.removeItem('chatSessionHistory');
+        localStorage.removeItem(historyKey);
       }
     } else if (currentMessages.length > 0) {
       const lastAiMsg = [...currentMessages].reverse().find(msg => msg.type === 'ai');
@@ -99,7 +111,7 @@ export default function ChatPage() {
           unread: 0,
         }];
         setSessionHistory(initialHistory);
-        localStorage.setItem('chatSessionHistory', JSON.stringify(initialHistory));
+        localStorage.setItem(historyKey, JSON.stringify(initialHistory));
       }
     }
   }, []);
@@ -124,9 +136,11 @@ export default function ChatPage() {
       userId: userData.username || 'guest',
     };
 
+    const { messagesKey, historyKey } = getUserData();
+
     setMessages(prev => {
       const newMessages = [...prev, userMsg];
-      localStorage.setItem('chatMessages', JSON.stringify(newMessages));
+      localStorage.setItem(messagesKey, JSON.stringify(newMessages));
       return newMessages;
     });
 
@@ -147,7 +161,7 @@ export default function ChatPage() {
 
       setMessages(prev => {
         const newMessages = [...prev, aiMsg];
-        localStorage.setItem('chatMessages', JSON.stringify(newMessages));
+        localStorage.setItem(messagesKey, JSON.stringify(newMessages));
         return newMessages;
       });
 
@@ -161,7 +175,7 @@ export default function ChatPage() {
           unread: 0,
         };
         const newHistory = [newSession, ...prev].slice(0, 10);
-        localStorage.setItem('chatSessionHistory', JSON.stringify(newHistory));
+        localStorage.setItem(historyKey, JSON.stringify(newHistory));
         return newHistory;
       });
     } else {
@@ -188,7 +202,8 @@ export default function ChatPage() {
   };
 
   const handleClearHistory = () => {
-    localStorage.removeItem('chatSessionHistory');
+    const { historyKey } = getUserData();
+    localStorage.removeItem(historyKey);
     setSessionHistory([]);
   };
 

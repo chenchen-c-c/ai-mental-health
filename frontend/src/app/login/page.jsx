@@ -23,6 +23,9 @@ export default function LoginPage() {
 
       if (res.code === 200) {
         const { token, user } = res.data;
+        // 新用户登录时清除上一个用户的聊天数据
+        localStorage.removeItem('chatMessages');
+        localStorage.removeItem('chatSessionHistory');
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
 
