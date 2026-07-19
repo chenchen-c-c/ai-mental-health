@@ -2,7 +2,9 @@ import axios from 'axios';
 
 const isMock = false;
 
-const baseURL = 'http://127.0.0.1:5000/api';
+const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
+  ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
+  : "http://127.0.0.1:5000/api";
 
 const service = axios.create({
   baseURL,
