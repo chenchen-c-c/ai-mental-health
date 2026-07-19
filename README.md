@@ -5,7 +5,7 @@
 ## 功能模块
 
 - 用户登录 / 注册（JWT 鉴权）
-- AI 情绪对话（接入 DeepSeek 大模型）
+- AI 情绪对话（接入智谱 AI GLM-4-Flash 大模型）
 - 心情日记 CRUD
 - 心理知识库浏览
 - 管理员数据看板
@@ -17,7 +17,7 @@
 | 前端 | Next.js 16 + React 19 + Ant Design 6 + Tailwind CSS |
 | 后端 | Python Flask + Flask-SQLAlchemy + Flask-CORS + PyJWT |
 | 数据库 | MySQL（Navicat 17 管理） |
-| AI 接口 | DeepSeek API（OpenAI 兼容格式） |
+| AI 接口 | 智谱 AI GLM-4-Flash（OpenAI 兼容格式） |
 
 ## 本地启动
 
@@ -46,9 +46,17 @@ python app.py
 使用 Navicat 17 新建数据库 `mental_health`，字符集选择 `utf8mb4`。后端启动时 SQLAlchemy 会自动建表。数据库连接信息通过 `backend/.env` 文件配置（参考 `config.py` 中的字段）。
 
 ## 线上部署
-线上部署URL:
-http://119.91.201.198/
 
+线上部署 URL：http://119.91.201.198/
+
+### 账号说明
+
+| 角色 | 用户名 | 密码 | 说明 |
+|------|--------|------|------|
+| 管理员 | admin | 123456 | 登录后台管理看板（/back/dashboard/） |
+| 普通用户 | — | — | 在前台自行注册即可 |
+
+> 管理员账号仅用于项目演示与评审，密码为默认值，实际部署请注意修改。
 
 ## 仓库结构
 
