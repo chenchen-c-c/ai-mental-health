@@ -22,7 +22,8 @@ print(f"=======================")
 init_ai_client()
 
 db.init_app(app)
-cors.init_app(app, resources={r'/api/*': {'origins': ['http://localhost:3000'], 'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 'allow_headers': ['Content-Type', 'Authorization']}})
+cors_origins = os.getenv('CORS_ORIGINS', '*')
+cors.init_app(app, resources={r'/api/*': {'origins': cors_origins, 'methods': ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], 'allow_headers': ['Content-Type', 'Authorization']}})
 
 from routes.auth import auth_bp
 from routes.journal import journal_bp
