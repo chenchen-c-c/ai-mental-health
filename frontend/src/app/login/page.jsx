@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Button, Form, Input, message } from 'antd';
 import { UserOutlined, LockOutlined, ArrowLeftOutlined, RobotOutlined } from '@ant-design/icons';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { post } from '../utils/request';
 
-export default function LoginPage() {
+function LoginForm() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const defaultUsername = searchParams.get('username') || '';
@@ -54,6 +54,59 @@ export default function LoginPage() {
   };
 
   return (
+    <Form
+      name="login"
+      initialValues={{ username: defaultUsername, remember: true }}
+      onFinish={handleSubmit}
+      layout="vertical"
+      className="space-y-6"
+    >
+      <Form.Item
+        name="username"
+        label="用户名"
+        rules={[
+          { required: true, message: '请输入用户名' },
+          { min: 3, message: '用户名至少3个字符' },
+        ]}
+      >
+        <Input
+          prefix={<UserOutlined className="text-gray-400" />}
+          placeholder="请输入用户名"
+          size="large"
+        />
+      </Form.Item>
+
+      <Form.Item
+        name="password"
+        label="密码"
+        rules={[
+          { required: true, message: '请输入密码' },
+          { min: 6, message: '密码至少6个字符' },
+        ]}
+      >
+        <Input.Password
+          prefix={<LockOutlined className="text-gray-400" />}
+          placeholder="请输入密码"
+          size="large"
+        />
+      </Form.Item>
+
+      <Form.Item>
+        <Button
+          type="primary"
+          htmlType="submit"
+          loading={loading}
+          className="w-full h-12 text-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 border-none rounded-lg"
+        >
+          登录账户
+        </Button>
+      </Form.Item>
+    </Form>
+  );
+}
+
+export default function LoginPage() {
+  return (
     <div className="min-h-screen flex">
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-500 flex-col items-center justify-center p-12">
         <div className="text-center flex flex-col items-center justify-center flex-1">
@@ -77,54 +130,9 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-2">登录您的账户</h2>
           <p className="text-gray-500 mb-8">请输入您的登录信息</p>
 
-          <Form
-            name="login"
-            initialValues={{ username: defaultUsername, remember: true }}
-            onFinish={handleSubmit}
-            layout="vertical"
-            className="space-y-6"
-          >
-            <Form.Item
-              name="username"
-              label="用户名"
-              rules={[
-                { required: true, message: '请输入用户名' },
-                { min: 3, message: '用户名至少3个字符' },
-              ]}
-            >
-              <Input
-                prefix={<UserOutlined className="text-gray-400" />}
-                placeholder="请输入用户名"
-                size="large"
-              />
-            </Form.Item>
-
-            <Form.Item
-              name="password"
-              label="密码"
-              rules={[
-                { required: true, message: '请输入密码' },
-                { min: 6, message: '密码至少6个字符' },
-              ]}
-            >
-              <Input.Password
-                prefix={<LockOutlined className="text-gray-400" />}
-                placeholder="请输入密码"
-                size="large"
-              />
-            </Form.Item>
-
-            <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                className="w-full h-12 text-lg bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 border-none rounded-lg"
-              >
-                登录账户
-              </Button>
-            </Form.Item>
-          </Form>
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
 
           <div className="text-center mt-6">
             <p className="text-gray-500">
