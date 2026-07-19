@@ -46,8 +46,9 @@ python app.py
 使用 Navicat 17 新建数据库 `mental_health`，字符集选择 `utf8mb4`。后端启动时 SQLAlchemy 会自动建表。数据库连接信息通过 `backend/.env` 文件配置（参考 `config.py` 中的字段）。
 
 ## 线上部署
+线上部署URL:
+http://119.91.201.198/
 
-本项目暂无公网线上部署 URL，以上本地访问地址即为唯一运行入口。
 
 ## 仓库结构
 
