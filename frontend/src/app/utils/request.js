@@ -4,7 +4,7 @@ const isMock = false;
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL
   ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/api`
-  : "http://127.0.0.1:5000/api";
+  : "/api";
 
 const service = axios.create({
   baseURL,
